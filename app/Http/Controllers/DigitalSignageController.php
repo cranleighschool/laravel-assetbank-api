@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 class DigitalSignageController extends Controller
 {
     public $assetBank;
-    public $parts;
 
     public function __construct(AssetBankApi $assetBank)
     {
@@ -54,37 +53,15 @@ class DigitalSignageController extends Controller
         $options = [
             'attribute_701' => 'Senior',
             'attribute_709' => 'Best',
-            'pageSize' => 1,
+            'pageSize' => 100,
             'sortAttributeId' => 7,
             'sortDescending' => 'true',
             'includeImplicitCategoryMembers' => 'false',
             'orientation' => 1,
+            'descriptiveCategoryForm.categoryIds' => $incCats
         ];
 
-        return $this->assetBank->get('asset-search?'.$this->getQueryString($incCats, $options));
+        return $this->assetBank->get('asset-search', $options);
 
-    }
-
-    private function add($key, $value)
-    {
-        $this->parts[] = [
-            'key' => $key,
-            'value' => $value,
-        ];
-    }
-
-    private function getQueryString(array $incCats, array $options, $separator = '&', $equals = '=')
-    {
-        $queryString = [];
-        foreach ($options as $key => $value) {
-            $this->add($key, $value);
-        }
-        foreach ($incCats as $catIDs) {
-            $this->add('descriptiveCategoryForm.categoryIds', $catIDs);
-        }
-        foreach ($this->parts as $part) {
-            $queryString[] = urlencode($part[ 'key' ]) . $equals . urlencode($part[ 'value' ]);
-        }
-        return implode($separator, $queryString);
     }
 }
