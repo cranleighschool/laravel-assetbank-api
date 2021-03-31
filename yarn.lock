@@ -3979,7 +3979,7 @@ klona@^2.0.4:
   resolved "https://registry.yarnpkg.com/klona/-/klona-2.0.4.tgz#7bb1e3affb0cb8624547ef7e8f6708ea2e39dfc0"
   integrity sha512-ZRbnvdg/NxqzC7L9Uyqzf4psi1OM4Cuc+sJAkQPjO6XkQIJTNbfK2Rsmbw8fx1p2mkZdp2FZYo2+LwXYY/uwIA==
 
-laravel-mix@^6.0.6:
+laravel-mix@^6.0.13:
   version "6.0.13"
   resolved "https://registry.yarnpkg.com/laravel-mix/-/laravel-mix-6.0.13.tgz#e9cb297fede8deec0e224c3e528d5a154ee10d47"
   integrity sha512-2sFmYgX24dkKlQ3OX6363YHvjONnqt9uer0TcTxcZQmaRxrh1xcK/aJjhUiVYUNOjsg8OmEFzTDp4nokOpWVkQ==
