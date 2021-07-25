@@ -39,7 +39,7 @@ trait AnnualSmugmugSetup
      *
      * @return string
      */
-    private function getThisYear()
+    private function getThisYear(): string
     {
         $now = now();
         // Essentially, if it's August or later in the year, then we get "This year - Next Year"
@@ -49,6 +49,7 @@ trait AnnualSmugmugSetup
             // If it's before August, then our academic year is technically "Last Year - This Year"
             $year = sprintf("%s-%s", $now->year - 1, $now->year);
         }
+
         return $year;
     }
 
