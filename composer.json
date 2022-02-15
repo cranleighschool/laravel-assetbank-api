@@ -1,5 +1,5 @@
 {
-    "name": "laravel/laravel",
+    "name": "cranleighschool/asset-bank-api",
     "type": "project",
     "description": "The Laravel Framework.",
     "keywords": [
@@ -8,20 +8,19 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^8.0",
         "ext-json": "*",
-        "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
-        "laravel/framework": "^8.12",
+        "laravel/framework": "^9",
         "guzzlehttp/guzzle": "7.2.0",
         "laravel/tinker": "^2.5",
         "lildude/phpsmug": "dev-updateGuzzle"
     },
     "require-dev": {
-        "facade/ignition": "^2.5",
+        "spatie/laravel-ignition": "^1.0",
         "fakerphp/faker": "^1.9.1",
         "mockery/mockery": "^1.4.1",
-        "nunomaduro/collision": "^5.0",
+        "nunomaduro/collision": "^6.1",
         "phpunit/phpunit": "^9.3.3"
     },
     "config": {
