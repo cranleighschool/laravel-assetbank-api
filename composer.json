@@ -11,8 +11,7 @@
         "php": "^8.0",
         "ext-json": "*",
         "fruitcake/laravel-cors": "^2.0",
-        "laravel/framework": "^9",
-        "guzzlehttp/guzzle": "7.2.0",
+        "laravel/framework": "^9.0",
         "laravel/tinker": "^2.5",
         "lildude/phpsmug": "dev-updateGuzzle"
     },
