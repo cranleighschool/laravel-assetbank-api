@@ -151,6 +151,7 @@ trait AnnualSmugmugSetup
             "Music" => "Public",
             "Sport" => "Public",
             "Drama" => "Public",
+            "Trips" => "Public",
             self::$HOUSE_PHOTOS => "Public",
         ];
 
