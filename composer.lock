@@ -695,20 +695,21 @@
         },
         {
             "name": "guzzlehttp/oauth-subscriber",
-            "version": "0.5.0",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/oauth-subscriber.git",
-                "reference": "c7a04dd4f2a319d954da58363709c25388cc06a2"
+                "reference": "8d6cab29f8397e5712d00a383eeead36108a3c1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/oauth-subscriber/zipball/c7a04dd4f2a319d954da58363709c25388cc06a2",
-                "reference": "c7a04dd4f2a319d954da58363709c25388cc06a2",
+                "url": "https://api.github.com/repos/guzzle/oauth-subscriber/zipball/8d6cab29f8397e5712d00a383eeead36108a3c1f",
+                "reference": "8d6cab29f8397e5712d00a383eeead36108a3c1f",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.5|^7.2",
+                "guzzlehttp/psr7": "^1.7|^2.0",
                 "php": ">=5.5.0"
             },
             "require-dev": {
@@ -720,7 +721,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "0.5-dev"
+                    "dev-master": "0.6-dev"
                 }
             },
             "autoload": {
@@ -747,9 +748,9 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/oauth-subscriber/issues",
-                "source": "https://github.com/guzzle/oauth-subscriber/tree/0.5.0"
+                "source": "https://github.com/guzzle/oauth-subscriber/tree/0.6.0"
             },
-            "time": "2021-03-07T09:39:26+00:00"
+            "time": "2021-07-13T12:01:32+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1707,23 +1708,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/fredbradley/phpSmug.git",
-                "reference": "f469bfabc9850f76e9ab1cd599be5e326292c0bb"
+                "reference": "898e35c6227cd493ae7a044521a32ea3556c3c72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fredbradley/phpSmug/zipball/f469bfabc9850f76e9ab1cd599be5e326292c0bb",
-                "reference": "f469bfabc9850f76e9ab1cd599be5e326292c0bb",
+                "url": "https://api.github.com/repos/fredbradley/phpSmug/zipball/898e35c6227cd493ae7a044521a32ea3556c3c72",
+                "reference": "898e35c6227cd493ae7a044521a32ea3556c3c72",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/guzzle": "^7.0.1",
-                "guzzlehttp/oauth-subscriber": "^0.5",
+                "guzzlehttp/guzzle": "^7.2",
+                "guzzlehttp/oauth-subscriber": "^0.6",
                 "php": ">=7.3.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "~2.12",
-                "php-coveralls/php-coveralls": "^2.1",
-                "phpunit/phpunit": "~5.0"
             },
             "type": "library",
             "extra": {
@@ -1764,7 +1760,7 @@
                     "url": "https://github.com/lildude"
                 }
             ],
-            "time": "2021-07-26T15:35:34+00:00"
+            "time": "2023-02-16T15:16:43+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -6084,16 +6080,16 @@
         },
         {
             "name": "nunomaduro/collision",
-            "version": "v7.0.2",
+            "version": "v7.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nunomaduro/collision.git",
-                "reference": "15e5fe35305419c9c6cf196be8d62cf70087a20c"
+                "reference": "fbf3c8a8ee08068bee7d81ee0cee5ddf032aaa84"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/15e5fe35305419c9c6cf196be8d62cf70087a20c",
-                "reference": "15e5fe35305419c9c6cf196be8d62cf70087a20c",
+                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/fbf3c8a8ee08068bee7d81ee0cee5ddf032aaa84",
+                "reference": "fbf3c8a8ee08068bee7d81ee0cee5ddf032aaa84",
                 "shasum": ""
             },
             "require": {
@@ -6104,8 +6100,8 @@
             },
             "require-dev": {
                 "laravel/framework": "^10.0.0",
-                "laravel/pint": "^1.4.1",
-                "laravel/sail": "^1.20.1",
+                "laravel/pint": "^1.5.0",
+                "laravel/sail": "^1.20.2",
                 "laravel/sanctum": "^3.2.1",
                 "laravel/tinker": "^2.8.0",
                 "nunomaduro/larastan": "^2.4.0",
@@ -6171,7 +6167,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2023-02-11T18:10:08+00:00"
+            "time": "2023-02-16T14:34:30+00:00"
         },
         {
             "name": "phar-io/manifest",
