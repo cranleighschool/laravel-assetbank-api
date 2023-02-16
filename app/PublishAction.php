@@ -14,9 +14,7 @@ class PublishAction extends Model
 
     public function searchCriteria()
     {
-
-        return $this->hasMany('App\SearchCriteria', 'Id', 'SearchCriteriaId');
-
+        return $this->hasMany(SearchCriteria::class, 'Id', 'SearchCriteriaId');
     }
 
     public function getruntimeAttribute()

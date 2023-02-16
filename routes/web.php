@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\AssetBankController;
+use App\Http\Controllers\AssetBankUpdateController;
+use App\Http\Controllers\DigitalSignageController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\SmugMugController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,13 +24,13 @@ Route::get('nagioscheck', function () {
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('ds', 'DigitalSignageController@test');
-Route::get('asset/{id}', 'AssetBankController@getAssetByID');
-Route::get('group/{id}', 'AssetBankController@get_recent_photos_from_group');
-Route::get('list-categories', 'AssetBankController@listAssetBankCategories');
-Route::get('test/{id}', 'AssetBankController@fredtest');
-Route::get('attributes', 'AssetBankController@getAttributes');
-Route::get('related-events/{searchTerm}/{exclude?}', 'AssetBankController@relatedEvents');
+Route::get('ds', [DigitalSignageController::class, 'test']);
+Route::get('asset/{id}', [AssetBankController::class, 'getAssetByID']);
+Route::get('group/{id}', [AssetBankController::class, 'get_recent_photos_from_group']);
+Route::get('list-categories', [AssetBankController::class, 'listAssetBankCategories']);
+Route::get('test/{id}', [AssetBankController::class,'fredtest']);
+Route::get('attributes', [AssetBankController::class, 'getAttributes']);
+Route::get('related-events/{searchTerm}/{exclude?}', [AssetBankController::class, 'relatedEvents']);
 /*
 |--------------------------------------------------------------------------
 | For The Website
@@ -38,9 +43,9 @@ Route::get('related-events/{searchTerm}/{exclude?}', 'AssetBankController@relate
 
 Route::group(['prefix' => 'forwebsite'], function () {
 
-    Route::get('{id}', 'AssetBankController@getAssetInfoForWebsite')->name("assetInfoWeb");
-    Route::get('{id}/photo/{target?}', 'ImageController@displayImage')->name("resizedImage");
-    Route::get('{id}/related', 'AssetBankController@relatedImages')->name("relatedImages");
+    Route::get('{id}', [AssetBankController::class, 'getAssetInfoForWebsite'])->name("assetInfoWeb");
+    Route::get('{id}/photo/{target?}', [ImageController::class, 'displayImage'])->name("resizedImage");
+    Route::get('{id}/related', [AssetBankController::class, 'relatedImages'])->name("relatedImages");
 });
 
 /*
@@ -54,10 +59,10 @@ Route::group(['prefix' => 'forwebsite'], function () {
 */
 
 Route::group(['prefix' => 'database'], function () {
-    Route::get('check/{path?}', 'AssetBankUpdateController@searchCriteria');
+    Route::get('check/{path?}', [AssetBankUpdateController::class, 'searchCriteria']);
     Route::get('publish/{path}');
     Route::get('update/{path}');
-    Route::get('run-update', 'AssetBankUpdateController@run_database_update');
+    Route::get('run-update', [AssetBankUpdateController::class, 'run_database_update']);
 });
 
 /*
@@ -70,6 +75,6 @@ Route::group(['prefix' => 'database'], function () {
 */
 
 Route::group(['prefix' => 'smugmug'], function () {
-    Route::get('{house}', 'SmugMugController@getHouseAlbumsOrFolders');
-   // Route::get('{username}/{endpoint}', 'SmugMugController@base');
+    Route::get('{house}', [SmugMugController::class, 'getHouseAlbumsOrFolders']);
+    // Route::get('{username}/{endpoint}', 'SmugMugController@base');
 });
