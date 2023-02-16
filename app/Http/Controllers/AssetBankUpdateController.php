@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\PublishAction;
-use App\SearchCriteria;
+use App\Models\PublishAction;
+use App\Models\SearchCriteria;
 
 class AssetBankUpdateController extends Controller
 {
