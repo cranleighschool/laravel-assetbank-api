@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\AssetBankApi;
-use Illuminate\Http\Request;
 
 class DigitalSignageController extends Controller
 {
@@ -58,10 +57,9 @@ class DigitalSignageController extends Controller
             'sortDescending' => 'true',
             'includeImplicitCategoryMembers' => 'false',
             'orientation' => 1,
-            'descriptiveCategoryForm.categoryIds' => $incCats
+            'descriptiveCategoryForm.categoryIds' => $incCats,
         ];
 
         return $this->assetBank->get('asset-search', $options);
-
     }
 }

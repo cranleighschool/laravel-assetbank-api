@@ -4,59 +4,69 @@ namespace App\Http;
 
 /**
  * Class Asset
- * @package App\Http
  */
 class Asset
 {
-
     /**
      * @var int
      */
     public $asset_id;
+
     /**
      * @var
      */
     public $title;
+
     /**
      * @var
      */
     public $description;
+
     /**
      * @var
      */
     public $event_name;
+
     /**
      * @var
      */
     public $dateAdded;
+
     /**
      * @var
      */
     public $photographer;
+
     /**
      * @var
      */
     public $photo;
+
     /**
      * @var
      */
     public $websiteQuality;
+
     /**
      * @var
      */
     public $heroQuality;
+
     /**
      * @var
      */
     public $assetBankUri;
+
     /**
      * @var array
      */
     public $tags = [];
+
     /**
      * @var array
      */
     public $rating = [];
+
     /**
      * @var bool
      */
@@ -66,19 +76,21 @@ class Asset
      * @var int
      */
     private $id;
+
     /**
      * @var array
      */
     protected $categories = [];
+
     /**
      * @var string
      */
-    protected $assetBankRoot = "https://photos.cranleigh.org/asset-bank/";
+    protected $assetBankRoot = 'https://photos.cranleigh.org/asset-bank/';
 
     /**
      * Asset constructor.
      *
-     * @param int $asset_id
+     * @param  int  $asset_id
      */
     public function __construct(int $asset_id)
     {
@@ -89,7 +101,7 @@ class Asset
     }
 
     /**
-     * @param string $title
+     * @param  string  $title
      */
     public function setTitle(string $title): void
     {
@@ -99,7 +111,7 @@ class Asset
     }
 
     /**
-     * @param string $description
+     * @param  string  $description
      */
     public function setDescription(string $description): void
     {
@@ -109,7 +121,7 @@ class Asset
     }
 
     /**
-     * @param string $event_name
+     * @param  string  $event_name
      */
     public function setEventName(string $event_name): void
     {
@@ -119,7 +131,7 @@ class Asset
     }
 
     /**
-     * @param string $photographer
+     * @param  string  $photographer
      */
     public function setPhotographer(string $photographer): void
     {
@@ -128,27 +140,26 @@ class Asset
         }
     }
 
-
     /**
-     * @param string $value
+     * @param  string  $value
      */
     protected function explodeCategories(string $value): void
     {
-        $cats = explode("/", $value);
+        $cats = explode('/', $value);
         foreach ($cats as $single_category) {
             array_push($this->categories, $single_category);
         }
     }
 
     /**
-     * @param string $value
+     * @param  string  $value
      */
     public function setCategories(string $value): void
     {
         $categories = [];
         // If more than one category
         if (strpos($value, ';')) {
-            $allcats = explode(";", $value);
+            $allcats = explode(';', $value);
             foreach ($allcats as $cat) {
                 $this->explodeCategories($value);
             }
@@ -165,9 +176,8 @@ class Asset
              * We were finding that sometimes if multiple tags were added the correct departmental tag wasn't pulling through
              * as it was on the same line as a semiconlon
              */
-
-            if (strpos($category, ";")) {
-                $split = explode(";", $category);
+            if (strpos($category, ';')) {
+                $split = explode(';', $category);
                 foreach ($split as $cat) {
                     $this->addTag($this->sanitizeCategory($cat));
                 }
@@ -179,21 +189,20 @@ class Asset
     }
 
     /**
-     * @param string $category
-     *
+     * @param  string  $category
      * @return string
      */
     private function sanitizeCategory(string $category): string
     {
         $category = trim($category);
-        $category = str_replace("(Boys)", "", $category);
-        $category = str_replace("(Girls)", "", $category);
+        $category = str_replace('(Boys)', '', $category);
+        $category = str_replace('(Girls)', '', $category);
 
         return trim($category);
     }
 
     /**
-     * @param string $date
+     * @param  string  $date
      */
     public function setDateAdded(string $date): void
     {
@@ -203,31 +212,27 @@ class Asset
     }
 
     /**
-     * @param string $tag
+     * @param  string  $tag
      */
     public function addTag(string $tag): void
     {
         array_push($this->tags, trim($tag));
     }
 
-    /**
-     *
-     */
     private function setUris(): void
     {
-        $this->assetBankUri = $this->assetBankRoot . "action/viewAsset?id=" . $this->id;
-        $this->photo = route("resizedImage", [$this->id]);
+        $this->assetBankUri = $this->assetBankRoot.'action/viewAsset?id='.$this->id;
+        $this->photo = route('resizedImage', [$this->id]);
         $this->websiteQuality = $this->getPhotoUri(800);
         $this->heroQuality = $this->getPhotoUri(2880);
     }
 
     /**
-     * @param int $size
-     *
+     * @param  int  $size
      * @return string
      */
     private function getPhotoUri(int $size): string
     {
-        return route("resizedImage", [$this->id, $size]);
+        return route('resizedImage', [$this->id, $size]);
     }
 }

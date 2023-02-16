@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Http\Traits;
-
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\ClientException;
@@ -11,21 +9,21 @@ use Illuminate\Support\Str;
 
 trait AnnualSmugmugSetup
 {
-    public static $HOUSE_PHOTOS = "House Photos";
+    public static $HOUSE_PHOTOS = 'House Photos';
 
     /**
-     * @param string      $house
-     * @param string|null $endpoint
-     *
+     * @param  string  $house
+     * @param  string|null  $endpoint
      * @return mixed
      */
     public function getHouseFolder(string $house, string $endpoint = null)
     {
         try {
-            return $this->client->get("folder/user/" . $this->username . "/" . $this->getThisYear() . "/" . self::customSlugger(self::$HOUSE_PHOTOS) . "/" . $house . $endpoint);
+            return $this->client->get('folder/user/'.$this->username.'/'.$this->getThisYear().'/'.self::customSlugger(self::$HOUSE_PHOTOS).'/'.$house.$endpoint);
         } catch (ClientException $exception) {
             if ($exception->getCode() === 404) {
                 $this->createHouseFolders();
+
                 return $this->getHouseFolder($house, $endpoint);
             } else {
                 throw $exception;
@@ -44,27 +42,26 @@ trait AnnualSmugmugSetup
         $now = now();
         // Essentially, if it's August or later in the year, then we get "This year - Next Year"
         if ($now->month >= Carbon::AUGUST) {
-            $year = sprintf("%s-%s", $now->year, $now->year + 1);
+            $year = sprintf('%s-%s', $now->year, $now->year + 1);
         } else {
             // If it's before August, then our academic year is technically "Last Year - This Year"
-            $year = sprintf("%s-%s", $now->year - 1, $now->year);
+            $year = sprintf('%s-%s', $now->year - 1, $now->year);
         }
 
         return $year;
     }
 
     /**
-     * @param string $input
-     *
+     * @param  string  $input
      * @return string
      */
     public static function customSlugger(string $input): string
     {
-        return implode("-",
+        return implode('-',
             array_map(
                 'ucfirst',
                 explode(
-                    "-",
+                    '-',
                     Str::slug($input)
                 )
             )
@@ -81,10 +78,10 @@ trait AnnualSmugmugSetup
         $housePhotosFolder = $this->getThisYearsHousePhotosFolder();
         foreach ($folders as $house) {
             try {
-                $smugFolders[] = $this->client->post($housePhotosFolder->Uri . "!folders", [
-                    "UrlName" => self::customSlugger($house),
-                    "Name" => $house,
-                    "Privacy" => 'Unlisted',
+                $smugFolders[] = $this->client->post($housePhotosFolder->Uri.'!folders', [
+                    'UrlName' => self::customSlugger($house),
+                    'Name' => $house,
+                    'Privacy' => 'Unlisted',
                 ]);
             } catch (ClientException $exception) {
                 $body = $exception->getRequest()->getBody();
@@ -97,6 +94,7 @@ trait AnnualSmugmugSetup
                 ]);
             }
         }
+
         return $smugFolders;
     }
 
@@ -106,8 +104,7 @@ trait AnnualSmugmugSetup
     public function getThisYearsHousePhotosFolder()
     {
         try {
-            return $this->client->get($this->getThisYearsFolder()->Uri . "/House-Photos");
-
+            return $this->client->get($this->getThisYearsFolder()->Uri.'/House-Photos');
         } catch (ClientException $exception) {
             if ($exception->getCode() === 404) {
                 // Create the top level folders
@@ -118,7 +115,6 @@ trait AnnualSmugmugSetup
                 throw $exception;
             }
         }
-
     }
 
     /**
@@ -127,13 +123,13 @@ trait AnnualSmugmugSetup
     public function getThisYearsFolder()
     {
         try {
-            return $this->client->get("folder/user/" . $this->username . "/" . $this->getThisYear());
+            return $this->client->get('folder/user/'.$this->username.'/'.$this->getThisYear());
         } catch (ClientException $exception) {
             if ($exception->getCode() === 404) {
-                return $this->client->post("folder/user/" . $this->username . "/!folders", [
-                    "UrlName" => $this->getThisYear(),
-                    "Name" => $this->getThisYear(),
-                    "Privacy" => "Public",
+                return $this->client->post('folder/user/'.$this->username.'/!folders', [
+                    'UrlName' => $this->getThisYear(),
+                    'Name' => $this->getThisYear(),
+                    'Privacy' => 'Public',
                 ]);
             } else {
                 throw $exception;
@@ -147,21 +143,21 @@ trait AnnualSmugmugSetup
     private function createTopLevelFolders()
     {
         $folders = [
-            "Misc" => "Public",
-            "Music" => "Public",
-            "Sport" => "Public",
-            "Drama" => "Public",
-            "Trips" => "Public",
-            self::$HOUSE_PHOTOS => "Public",
+            'Misc' => 'Public',
+            'Music' => 'Public',
+            'Sport' => 'Public',
+            'Drama' => 'Public',
+            'Trips' => 'Public',
+            self::$HOUSE_PHOTOS => 'Public',
         ];
 
         $smugFolders = [];
         foreach ($folders as $name => $privacy) {
             try {
-                $smugFolders = $this->client->post($this->getThisYearsFolder()->Uri . "!folders", [
-                    "UrlName" => self::customSlugger($name),
-                    "Name" => $name,
-                    "Privacy" => $privacy,
+                $smugFolders = $this->client->post($this->getThisYearsFolder()->Uri.'!folders', [
+                    'UrlName' => self::customSlugger($name),
+                    'Name' => $name,
+                    'Privacy' => $privacy,
                 ]);
             } catch (ClientException $exception) {
                 $body = $exception->getRequest()->getBody();
@@ -174,6 +170,7 @@ trait AnnualSmugmugSetup
                 );
             }
         }
+
         return $smugFolders;
     }
 }
