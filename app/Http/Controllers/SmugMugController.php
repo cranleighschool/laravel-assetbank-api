@@ -6,11 +6,9 @@ use App\Http\SmugMugApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 
 class SmugMugController extends Controller
 {
-
     /**
      * SmugMugController constructor.
      */
@@ -18,15 +16,15 @@ class SmugMugController extends Controller
     {
         $smugNickname = $request->get('username');
         if ($smugNickname === null) {
-            $smugNickname = "cranleigh";
+            $smugNickname = 'cranleigh';
         }
 
-        $this->smugmug = (new SmugMugApi('smug_'.$smugNickname . '.json'));
+        $this->smugmug = (new SmugMugApi('smug_'.$smugNickname.'.json'));
     }
 
     public function getHouseAlbumsOrFolders(string $house)
     {
-        return Cache::remember("smug_house_children_nodes_" . $house, now()->addMinutes(15), function () use ($house) {
+        return Cache::remember('smug_house_children_nodes_'.$house, now()->addMinutes(15), function () use ($house) {
             $house = ucfirst($house); // Sanitize, just in case
 
             $houseNodeChildren = $this->smugmug->getHouseNodeChildren($house);
@@ -41,7 +39,6 @@ class SmugMugController extends Controller
                         'thumb' => $this->smugmug->client->get($node->Uris->NodeCoverImage)->Image->ThumbnailUrl,
                     ];
                 }
-
             } catch (\ErrorException $exception) {
                 Log::error($exception->getMessage());
             }
@@ -52,6 +49,7 @@ class SmugMugController extends Controller
                 'uri' => $houseFolder->Folder->WebUri,
                 'children' => $nodes,
             ];
+
             return response()->json($response);
         });
     }

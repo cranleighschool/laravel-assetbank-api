@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use GuzzleHttp\Client as Guzzle;
 use App\Http\Asset;
+use GuzzleHttp\Client as Guzzle;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 
 /**
  * Class AssetBankController
- * @package App\Http\Controllers
  */
 class AssetBankController extends Controller
 {
     /**
      * @var string
      */
-    private $root_url = "https://photos.cranleigh.org/asset-bank/rest/";
+    private $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
 
     /**
      * @var array
@@ -38,36 +37,35 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param array|null $vars
-     *
+     * @param  array|null  $vars
      * @return array
      */
     protected function guzzleOpts(array $vars = null)
     {
-        if ($vars !== null) :
-            foreach ($vars as $key => $var) :
-                $this->guzzleOpts[ $key ] = $var;
-            endforeach;
-        endif;
+        if ($vars !== null) {
+            foreach ($vars as $key => $var) {
+                $this->guzzleOpts[$key] = $var;
+            }
+        }
+
         return $this->guzzleOpts;
     }
 
     /**
-     * @param      $id
-     * @param bool $raw
-     *
+     * @param    $id
+     * @param  bool  $raw
      * @return \App\Http\Asset|\Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function getAssetInfoForWebsite($id, $raw = false)
     {
-
-        $response = $this->api("assets/" . $id);
+        $response = $this->api('assets/'.$id);
         $asset = new Asset($id);
 
-        $asset->tags[] = "assetbank";
+        $asset->tags[] = 'assetbank';
 
-        $this->setReadableAttributes($asset, $response[ 'attributes' ]);
+        $this->setReadableAttributes($asset, $response['attributes']);
 
         $asset->tags = $this->simplify_tag_list($asset->tags);
 
@@ -84,116 +82,110 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param \App\Http\Asset $asset
-     *
+     * @param  \App\Http\Asset  $asset
      * @return bool
      */
     private function websiteCriteriaCheck(Asset $asset): bool
     {
-        if (in_array("Exclude DSignage", $asset->tags)) {
+        if (in_array('Exclude DSignage', $asset->tags)) {
             return false;
         }
 
-        if (in_array("Best", $asset->rating) && in_array("Highlights", $asset->rating)) {
+        if (in_array('Best', $asset->rating) && in_array('Highlights', $asset->rating)) {
             return true;
         }
 
         return false;
     }
 
-
     /**
-     * @param \App\Http\Asset $asset
-     * @param                 $attributes
+     * @param  \App\Http\Asset  $asset
+     * @param    $attributes
      */
     private function setReadableAttributes(Asset $asset, $attributes): void
     {
-
         foreach ($attributes as $attribute) {
             // Is this asset marked as Suitable for Publication
-            if ($attribute[ 'id' ] == 705) {
-                if ($attribute[ 'value' ] !== "Yes") {
-                    abort(403, "Image is not set as suitable for publication");
+            if ($attribute['id'] == 705) {
+                if ($attribute['value'] !== 'Yes') {
+                    abort(403, 'Image is not set as suitable for publication');
                 }
             }
 
             // Get Categories
-            if ($attribute[ 'id' ] == 17) {
-                $asset->setCategories($attribute[ 'value' ]);
+            if ($attribute['id'] == 17) {
+                $asset->setCategories($attribute['value']);
             }
 
             // Get Description
-            if ($attribute[ 'id' ] == 4) {
-                $asset->setDescription($attribute[ 'value' ]);
+            if ($attribute['id'] == 4) {
+                $asset->setDescription($attribute['value']);
             }
 
             // Get the Year Groups
-            if ($attribute[ 'id' ] == 718 && $attribute[ 'value' ]) {
-                $asset->addTag($attribute[ 'value' ]);
+            if ($attribute['id'] == 718 && $attribute['value']) {
+                $asset->addTag($attribute['value']);
             }
 
             // Get Title
-            if ($attribute[ 'id' ] == 3) {
-                $asset->setTitle($attribute[ 'value' ]);
+            if ($attribute['id'] == 3) {
+                $asset->setTitle($attribute['value']);
             }
 
             // Get Photographer's Name
-            if ($attribute[ 'id' ] == 706) {
-                $asset->setPhotographer($attribute[ 'value' ]);
+            if ($attribute['id'] == 706) {
+                $asset->setPhotographer($attribute['value']);
             }
 
             // Get Ratings as array
-            if ($attribute[ 'id' ] == 709) {
-                $asset->rating = explode(";", trim($attribute[ 'value' ]));
+            if ($attribute['id'] == 709) {
+                $asset->rating = explode(';', trim($attribute['value']));
             }
 
             // Get Event Name
-            if ($attribute[ 'id' ] == 716) {
-                $asset->setEventName($attribute[ 'value' ]);
+            if ($attribute['id'] == 716) {
+                $asset->setEventName($attribute['value']);
             }
 
             // Get DateTime of date added
-            if ($attribute[ 'id' ] == 8) {
-                $asset->setDateAdded($attribute[ 'value' ]);
+            if ($attribute['id'] == 8) {
+                $asset->setDateAdded($attribute['value']);
             }
         } // End foreach
     }
 
     /**
      * @param $tags
-     *
      * @return array
      */
     private function simplify_tag_list($tags)
     {
-
         return array_values(array_unique($tags));
     }
 
     /**
-     * @param      $id
-     * @param bool $new
-     *
+     * @param    $id
+     * @param  bool  $new
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function getAssetByID($id, $new = false)
     {
-        $response = $this->newApi("assets/" . $id);
-        
+        $response = $this->newApi('assets/'.$id);
+
         return new \App\Http\Resources\Asset($response);
     }
 
     /**
-     * @param       $endpoint
-     * @param array $options
-     *
+     * @param    $endpoint
+     * @param  array  $options
      * @return object
      */
     public function newApi($endpoint, $options = [])
     {
         if (! empty($options)) {
-            $query = "?" . http_build_query($options);
+            $query = '?'.http_build_query($options);
         } else {
             $query = null;
         }
@@ -201,28 +193,28 @@ class AssetBankController extends Controller
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->get("https://photos.cranleigh.org/asset-bank/rest/" . $endpoint . $query);
-        return $response->object();
+        ])->get('https://photos.cranleigh.org/asset-bank/rest/'.$endpoint.$query);
 
+        return $response->object();
     }
 
     /**
-     * @param       $endpoint
-     * @param array $options
-     *
+     * @param    $endpoint
+     * @param  array  $options
      * @return mixed
+     *
      * @throws \Exception
      */
     public function api($endpoint, $options = [])
     {
         if (! empty($options)) {
-            $query = "?" . http_build_query($options);
+            $query = '?'.http_build_query($options);
         } else {
             $query = null;
         }
 
         try {
-            $response = $this->guzzle->get($endpoint . $query, $this->guzzleOpts());
+            $response = $this->guzzle->get($endpoint.$query, $this->guzzleOpts());
         } catch (\GuzzleHttp\Exception\BadResponseException $e) {
             $resp = $e->getResponse();
 
@@ -237,8 +229,8 @@ class AssetBankController extends Controller
 
     /**
      * @param $id
-     *
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function relatedImages($id): JsonResponse
@@ -251,11 +243,11 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param             $searchTerm
-     * @param string|null $exclude
-     * @param bool        $raw
-     *
+     * @param    $searchTerm
+     * @param  string|null  $exclude
+     * @param  bool  $raw
      * @return \Illuminate\Http\JsonResponse|\stdClass
+     *
      * @throws \Exception
      */
     public function relatedEvents($searchTerm, string $exclude = null, $raw = false)
@@ -263,15 +255,15 @@ class AssetBankController extends Controller
         if ($exclude !== null) {
             $notinclude = array_map(function ($v) {
                 return trim($v);
-            }, explode(",", $exclude));
+            }, explode(',', $exclude));
         }
 
         $args = [
-            "attribute_716" => $searchTerm,
-            "pageSize" => 50,
+            'attribute_716' => $searchTerm,
+            'pageSize' => 50,
         ];
 
-        $response = $this->api("asset-search", $args);
+        $response = $this->api('asset-search', $args);
 
         $result = new \stdClass;
 
@@ -279,13 +271,13 @@ class AssetBankController extends Controller
 
         if (! empty($notinclude)) {
             foreach ($response as $key => $asset) {
-                if (in_array($asset[ 'id' ], $notinclude)) {
-                    unset($response[ $key ]);
+                if (in_array($asset['id'], $notinclude)) {
+                    unset($response[$key]);
                 }
             }
         }
         foreach ($response as $asset) {
-            $result->assets[] = $this->getAssetInfoForWebsite($asset[ 'id' ], true);
+            $result->assets[] = $this->getAssetInfoForWebsite($asset['id'], true);
         }
         $result->num = count($response);
 
@@ -301,32 +293,31 @@ class AssetBankController extends Controller
      */
     public function getAttributes(): JsonResponse
     {
-        $xml = $this->get("attributes");
+        $xml = $this->get('attributes');
+
         return response()->json($this->result);
     }
 
     /**
      * get_recent_photos_from_group function.
      *
-     * @access public
      *
-     * @param mixed $groupID
-     * @param int   $numPhotos (default: 15)
-     *
+     * @param  mixed  $groupID
+     * @param  int  $numPhotos (default: 15)
      * @return void
      */
-    function get_recent_photos_from_group($groupID, $numPhotos = 15)
+    public function get_recent_photos_from_group($groupID, $numPhotos = 15)
     {
         $xml = $this->get(
-            "asset-search",
+            'asset-search',
             [
-                "descriptiveCategoryForm.categoryIds" => $groupID,
-                "pageSize" => $numPhotos,
-                "attribute_701" => "Senior",
-                "sortAttributeId" => 7,
-                "sortDescending" => "true",
-                "orientation" => 1,
-                "attribute_709" => "Best"
+                'descriptiveCategoryForm.categoryIds' => $groupID,
+                'pageSize' => $numPhotos,
+                'attribute_701' => 'Senior',
+                'sortAttributeId' => 7,
+                'sortDescending' => 'true',
+                'orientation' => 1,
+                'attribute_709' => 'Best',
                 //    "includeImplicitCategoryMembers"=>"true"
             ]
         );
@@ -336,25 +327,27 @@ class AssetBankController extends Controller
 
     /**
      * @return array
+     *
      * @throws \Exception
      */
     public function newGetCategories(): array
     {
-        $categoryTree = $this->api("category-search");
+        $categoryTree = $this->api('category-search');
         $cats = [];
 
         foreach ($categoryTree as $category) {
             // don't show anything in the branding category
-            if ($category[ 'id' ] == "192") {
+            if ($category['id'] == '192') {
                 continue;
             }
-            $cats[ $category[ 'id' ] ] = $category[ 'name' ];
-            if ($category[ 'children' ]) {
-                foreach ($category[ 'children' ] as $child) {
-                    $cats[ $child[ 'id' ] ] = $child[ 'name' ];
+            $cats[$category['id']] = $category['name'];
+            if ($category['children']) {
+                foreach ($category['children'] as $child) {
+                    $cats[$child['id']] = $child['name'];
                 }
             }
         }
+
         return $cats;
     }
 
@@ -363,7 +356,7 @@ class AssetBankController extends Controller
      */
     public function get_categories(): array
     {
-        $this->get("category-search");
+        $this->get('category-search');
         $cats = [];
 
         foreach ($this->result as $tlc) {
@@ -373,7 +366,7 @@ class AssetBankController extends Controller
             } else {
             }
 
-            $cats[ (int)$tlc->id ] = (string)$tlc->name; // . " ".$more;
+            $cats[(int) $tlc->id] = (string) $tlc->name; // . " ".$more;
         }
 
         return $cats; // $this->result;
@@ -384,10 +377,8 @@ class AssetBankController extends Controller
      *
      * This function is used to iterate through the children of each category. Used in $this->get_categories()
      *
-     * @access public
      *
-     * @param mixed $object
-     *
+     * @param  mixed  $object
      * @return array
      */
     public function loop($object): array
@@ -395,7 +386,7 @@ class AssetBankController extends Controller
         $output = [];
         $loop = [];
         foreach ($object->category as $child) {
-            $output[ (int)$child->id ] = (string)$child->name;
+            $output[(int) $child->id] = (string) $child->name;
             if ($child->children && is_object($child->children)) {
                 $children = $this->loop($child->children);
                 $output = $output + $children;
@@ -407,47 +398,47 @@ class AssetBankController extends Controller
 
     /**
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function listAssetBankCategories(): JsonResponse
     {
         return $this->newGetCategories();
         $categories = $this->get_categories();
-        $data = ["count" => count($categories), "categories" => $categories];
+        $data = ['count' => count($categories), 'categories' => $categories];
 
         return response()->json($data);
     }
 
-
     /**
-     * @param       $endpoint
-     * @param array $options
+     * @param    $endpoint
+     * @param  array  $options
      */
     public function get($endpoint, $options = [])
     {
         if (! empty($options)) {
-            $query = "?" . http_build_query($options);
+            $query = '?'.http_build_query($options);
         } else {
-            $query = "";
+            $query = '';
         }
 
         $arrContextOptions = [
-            "ssl" => [
-                "verify_peer" => false,
-                "verify_peer_name" => false,
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
             ],
         ];
 
         $this->query = $query;
         $this->endpoint = $endpoint;
-        $xml = file_get_contents($this->root_url . $endpoint . $query, false,
+        $xml = file_get_contents($this->root_url.$endpoint.$query, false,
             stream_context_create($arrContextOptions));
         //  $this->result = simplexml_load_file($this->root_url.$endpoint.$query);
         $this->result = simplexml_load_string($xml);
         $this->count = count($this->result);
 
-        if (isset($this->result->assetSummary) && is_scalar($this->result->assetSummary)) :
-            foreach ($this->result->assetSummary as $asset) :
+        if (isset($this->result->assetSummary) && is_scalar($this->result->assetSummary)) {
+            foreach ($this->result->assetSummary as $asset) {
                 $asset->title = $this->get_asset_title($asset);
                 //    $moreDetails = simplexml_load_file($this->root_url."assets/".$asset->id)->url;
                 //    $asset->details = $moreDetails;
@@ -458,7 +449,7 @@ class AssetBankController extends Controller
                 unset($asset->contentUrl);
                 // unset($asset->fullAssetUrl);
                 // unset($asset->displayAttributes);
-            endforeach;
-        endif;
+            }
+        }
     }
 }

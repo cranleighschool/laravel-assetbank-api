@@ -9,8 +9,10 @@ class PublishAction extends Model
     public $timestamps = false;
 
     protected $table = 'publishaction';
+
     protected $fillable = ['ServerName'];
-    protected $primaryKey = "Id";
+
+    protected $primaryKey = 'Id';
 
     public function searchCriteria()
     {
@@ -19,10 +21,6 @@ class PublishAction extends Model
 
     public function getruntimeAttribute()
     {
-
-        return date("Y-m-d H:i:s", $this->attributes[ 'LastRunTime' ] / 1000);
-
+        return date('Y-m-d H:i:s', $this->attributes['LastRunTime'] / 1000);
     }
-
-
 }

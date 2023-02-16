@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('nagioscheck', function () {
     return 'GordonsAlive';
-})->name("nagios-check");
+})->name('nagios-check');
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,7 +28,7 @@ Route::get('ds', [DigitalSignageController::class, 'test']);
 Route::get('asset/{id}', [AssetBankController::class, 'getAssetByID']);
 Route::get('group/{id}', [AssetBankController::class, 'get_recent_photos_from_group']);
 Route::get('list-categories', [AssetBankController::class, 'listAssetBankCategories']);
-Route::get('test/{id}', [AssetBankController::class,'fredtest']);
+Route::get('test/{id}', [AssetBankController::class, 'fredtest']);
 Route::get('attributes', [AssetBankController::class, 'getAttributes']);
 Route::get('related-events/{searchTerm}/{exclude?}', [AssetBankController::class, 'relatedEvents']);
 /*
@@ -42,10 +42,9 @@ Route::get('related-events/{searchTerm}/{exclude?}', [AssetBankController::class
 */
 
 Route::group(['prefix' => 'forwebsite'], function () {
-
-    Route::get('{id}', [AssetBankController::class, 'getAssetInfoForWebsite'])->name("assetInfoWeb");
-    Route::get('{id}/photo/{target?}', [ImageController::class, 'displayImage'])->name("resizedImage");
-    Route::get('{id}/related', [AssetBankController::class, 'relatedImages'])->name("relatedImages");
+    Route::get('{id}', [AssetBankController::class, 'getAssetInfoForWebsite'])->name('assetInfoWeb');
+    Route::get('{id}/photo/{target?}', [ImageController::class, 'displayImage'])->name('resizedImage');
+    Route::get('{id}/related', [AssetBankController::class, 'relatedImages'])->name('relatedImages');
 });
 
 /*

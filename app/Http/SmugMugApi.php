@@ -1,15 +1,12 @@
 <?php
 
-
 namespace App\Http;
 
-
-use phpSmug\Client;
 use App\Http\Traits\AnnualSmugmugSetup;
+use phpSmug\Client;
 
 /**
  * Class SmugMugApi
- * @package App\Http
  */
 class SmugMugApi
 {
@@ -19,10 +16,12 @@ class SmugMugApi
      * @var string
      */
     private $appName = 'Asset Bank Api';
+
     /**
      * @var \phpSmug\Client
      */
     public $client;
+
     /**
      * @var string
      */
@@ -31,14 +30,14 @@ class SmugMugApi
     /**
      * SmugMugApi constructor.
      *
-     * @param string $configJson
+     * @param  string  $configJson
      *
      * @throws \JsonException
      */
     public function __construct(string $configJson)
     {
         if (! file_exists(base_path($configJson))) {
-            throw new \Exception("I can't find " . $configJson . " to read the config from.");
+            throw new \Exception("I can't find ".$configJson.' to read the config from.');
         }
 
         $config = json_decode(
@@ -47,7 +46,6 @@ class SmugMugApi
             512,
             JSON_THROW_ON_ERROR
         );
-
 
         $options = [
             'AppName' => $this->appName,
@@ -62,18 +60,18 @@ class SmugMugApi
         $this->setUsername();
     }
 
-    /**
-     *
-     */
-    private function setUsername() {
+    private function setUsername()
+    {
         $this->username = $this->client->get('!authuser')->User->NickName;
     }
 
-    public function getHouseNodeChildren(string $house) {
+    public function getHouseNodeChildren(string $house)
+    {
         $house = ucfirst($house);
         $nodeUri = $this->getHouseFolder($house)->Folder->Uris->Node;
+
         return $this->client->get($nodeUri.'!children', [
-            'count' => 100
+            'count' => 100,
         ]);
     }
 }

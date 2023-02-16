@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Http;
-
 
 use GuzzleHttp\Client as Guzzle;
 use Illuminate\Support\Facades\Http;
@@ -13,7 +11,8 @@ class AssetBankApi
      * @var \GuzzleHttp\Client
      */
     public $api;
-    public const API_ROOT = "https://photos.cranleigh.org/asset-bank/rest/";
+
+    public const API_ROOT = 'https://photos.cranleigh.org/asset-bank/rest/';
 
     /**
      * AssetBankController constructor.
@@ -31,14 +30,13 @@ class AssetBankApi
 
     public function get(string $endpoint, array $options = [])
     {
-        return $this->request("GET", $endpoint, $options);
+        return $this->request('GET', $endpoint, $options);
     }
 
     /**
-     * @param string $method
-     * @param string $endpoint
-     * @param array  $options
-     *
+     * @param  string  $method
+     * @param  string  $endpoint
+     * @param  array  $options
      * @return object
      */
     public function request(string $method, string $endpoint, $options = [])
@@ -49,20 +47,19 @@ class AssetBankApi
             'Content-Type' => 'application/json',
         ]);
         switch ($method) {
-            case "POST":
-                $response = $response->post(self::API_ROOT . $endpoint, $options);
+            case 'POST':
+                $response = $response->post(self::API_ROOT.$endpoint, $options);
                 break;
             default:
                 $response = Http::withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
-                ])->get(self::API_ROOT . $endpoint, $options);
+                ])->get(self::API_ROOT.$endpoint, $options);
                 break;
         }
 
-$response->throw();
+        $response->throw();
 
         return $response->object();
-
     }
 }

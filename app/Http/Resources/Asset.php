@@ -6,7 +6,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class Asset
- * @package App\Http\Resources
  */
 class Asset extends JsonResource
 {
@@ -15,12 +14,10 @@ class Asset extends JsonResource
      */
     private $attrs;
 
-
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request): array
@@ -46,14 +43,14 @@ class Asset extends JsonResource
     {
         $attrs = [];
         foreach ($this->attrs as $attr) {
-            $attrs[ $attr->name ] = $this->getAttribute($attr->name);
+            $attrs[$attr->name] = $this->getAttribute($attr->name);
         }
+
         return $attrs;
     }
 
     /**
-     * @param \App\Http\Resources\string $name
-     *
+     * @param  \App\Http\Resources\string  $name
      * @return |null
      */
     private function getAttribute(string $name)
@@ -64,11 +61,10 @@ class Asset extends JsonResource
             }
         });
         $value = $filtered->first()->value;
-        if ($value === "") {
+        if ($value === '') {
             return null;
         }
+
         return $value;
-
-
     }
 }
