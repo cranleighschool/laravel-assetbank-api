@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\UnauthenticatedToAssetBank;
 use App\Http\Asset;
 use GuzzleHttp\Client as Guzzle;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 
@@ -37,7 +39,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param  array|null  $vars
+     * @param array|null $vars
      * @return array
      */
     protected function guzzleOpts(array $vars = null)
@@ -53,14 +55,14 @@ class AssetBankController extends Controller
 
     /**
      * @param    $id
-     * @param  bool  $raw
+     * @param bool $raw
      * @return \App\Http\Asset|\Illuminate\Http\JsonResponse
      *
      * @throws \Exception
      */
     public function getAssetInfoForWebsite($id, $raw = false)
     {
-        $response = $this->api('assets/'.$id);
+        $response = $this->api('assets/' . $id);
         $asset = new Asset($id);
 
         $asset->tags[] = 'assetbank';
@@ -82,7 +84,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param  \App\Http\Asset  $asset
+     * @param \App\Http\Asset $asset
      * @return bool
      */
     private function websiteCriteriaCheck(Asset $asset): bool
@@ -99,7 +101,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param  \App\Http\Asset  $asset
+     * @param \App\Http\Asset $asset
      * @param    $attributes
      */
     private function setReadableAttributes(Asset $asset, $attributes): void
@@ -165,56 +167,69 @@ class AssetBankController extends Controller
 
     /**
      * @param    $id
-     * @param  bool  $new
-     * @return \Illuminate\Http\JsonResponse
+     * @param bool $new
+     * @return \App\Http\Resources\Asset
      *
      * @throws \Exception
      */
     public function getAssetByID($id, $new = false)
     {
-        $response = $this->newApi('assets/'.$id);
-
+        $response = $this->newApi('assets/' . $id);
+        return $response;
         return new \App\Http\Resources\Asset($response);
     }
 
     /**
      * @param    $endpoint
-     * @param  array  $options
+     * @param array $options
      * @return object
      */
-    public function newApi($endpoint, $options = [])
+    public function newApi($endpoint, $options = []): object
     {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
         } else {
             $query = null;
         }
+        try {
+            $response = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($endpoint . $query)
+                ->throw();
 
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ])->get('https://photos.cranleigh.org/asset-bank/rest/'.$endpoint.$query);
-
-        return $response->object();
+            return $response->object();
+        } catch (RequestException $exception) {
+            if ($exception->getCode() == 403) {
+                return response()->json([
+                    'error' => 'The server could not authenticate with the Asset Bank API.'
+                ], 401);
+            }
+            throw new \Exception($exception->getMessage());
+        }
     }
+
 
     /**
      * @param    $endpoint
-     * @param  array  $options
+     * @param array $options
      * @return mixed
      *
      * @throws \Exception
      */
-    public function api($endpoint, $options = [])
+    public
+    function api($endpoint, $options = [])
     {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
         } else {
             $query = null;
         }
 
         try {
-            $response = $this->guzzle->get($endpoint.$query, $this->guzzleOpts());
+            $response = $this->guzzle->get($endpoint . $query, $this->guzzleOpts());
         } catch (\GuzzleHttp\Exception\BadResponseException $e) {
             $resp = $e->getResponse();
 
@@ -233,7 +248,8 @@ class AssetBankController extends Controller
      *
      * @throws \Exception
      */
-    public function relatedImages($id): JsonResponse
+    public
+    function relatedImages($id): JsonResponse
     {
         $asset = $this->getAssetInfoForWebsite($id, true);
 
@@ -244,13 +260,14 @@ class AssetBankController extends Controller
 
     /**
      * @param    $searchTerm
-     * @param  string|null  $exclude
-     * @param  bool  $raw
+     * @param string|null $exclude
+     * @param bool $raw
      * @return \Illuminate\Http\JsonResponse|\stdClass
      *
      * @throws \Exception
      */
-    public function relatedEvents($searchTerm, string $exclude = null, $raw = false)
+    public
+    function relatedEvents($searchTerm, string $exclude = null, $raw = false)
     {
         if ($exclude !== null) {
             $notinclude = array_map(function ($v) {
@@ -269,7 +286,7 @@ class AssetBankController extends Controller
 
         $result->assets = [];
 
-        if (! empty($notinclude)) {
+        if (!empty($notinclude)) {
             foreach ($response as $key => $asset) {
                 if (in_array($asset['id'], $notinclude)) {
                     unset($response[$key]);
@@ -291,7 +308,8 @@ class AssetBankController extends Controller
     /**
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getAttributes(): JsonResponse
+    public
+    function getAttributes(): JsonResponse
     {
         $xml = $this->get('attributes');
 
@@ -302,11 +320,12 @@ class AssetBankController extends Controller
      * get_recent_photos_from_group function.
      *
      *
-     * @param  mixed  $groupID
-     * @param  int  $numPhotos (default: 15)
+     * @param mixed $groupID
+     * @param int $numPhotos (default: 15)
      * @return void
      */
-    public function get_recent_photos_from_group($groupID, $numPhotos = 15)
+    public
+    function get_recent_photos_from_group($groupID, $numPhotos = 15)
     {
         $xml = $this->get(
             'asset-search',
@@ -330,7 +349,8 @@ class AssetBankController extends Controller
      *
      * @throws \Exception
      */
-    public function newGetCategories(): array
+    public
+    function newGetCategories(): array
     {
         $categoryTree = $this->api('category-search');
         $cats = [];
@@ -354,7 +374,8 @@ class AssetBankController extends Controller
     /**
      * @return array|void
      */
-    public function get_categories(): array
+    public
+    function get_categories(): array
     {
         $this->get('category-search');
         $cats = [];
@@ -366,7 +387,7 @@ class AssetBankController extends Controller
             } else {
             }
 
-            $cats[(int) $tlc->id] = (string) $tlc->name; // . " ".$more;
+            $cats[(int)$tlc->id] = (string)$tlc->name; // . " ".$more;
         }
 
         return $cats; // $this->result;
@@ -378,15 +399,16 @@ class AssetBankController extends Controller
      * This function is used to iterate through the children of each category. Used in $this->get_categories()
      *
      *
-     * @param  mixed  $object
+     * @param mixed $object
      * @return array
      */
-    public function loop($object): array
+    public
+    function loop($object): array
     {
         $output = [];
         $loop = [];
         foreach ($object->category as $child) {
-            $output[(int) $child->id] = (string) $child->name;
+            $output[(int)$child->id] = (string)$child->name;
             if ($child->children && is_object($child->children)) {
                 $children = $this->loop($child->children);
                 $output = $output + $children;
@@ -401,7 +423,8 @@ class AssetBankController extends Controller
      *
      * @throws \Exception
      */
-    public function listAssetBankCategories(): JsonResponse
+    public
+    function listAssetBankCategories(): JsonResponse
     {
         return $this->newGetCategories();
         $categories = $this->get_categories();
@@ -412,12 +435,13 @@ class AssetBankController extends Controller
 
     /**
      * @param    $endpoint
-     * @param  array  $options
+     * @param array $options
      */
-    public function get($endpoint, $options = [])
+    public
+    function get($endpoint, $options = [])
     {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
         } else {
             $query = '';
         }
@@ -431,7 +455,7 @@ class AssetBankController extends Controller
 
         $this->query = $query;
         $this->endpoint = $endpoint;
-        $xml = file_get_contents($this->root_url.$endpoint.$query, false,
+        $xml = file_get_contents($this->root_url . $endpoint . $query, false,
             stream_context_create($arrContextOptions));
         //  $this->result = simplexml_load_file($this->root_url.$endpoint.$query);
         $this->result = simplexml_load_string($xml);
