@@ -14,9 +14,8 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::middleware('auth:sanctum')->group(function() {
-    Route::get('asset/{id}', [AssetBankController::class, 'getAssetByID']);
-});
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
+
+Route::get('asset/{id}', [AssetBankController::class, 'getAssetByID']);
+Route::get('/me', function (Request $request) {
     return $request->user();
 });
