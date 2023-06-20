@@ -12,6 +12,7 @@ class PublishAction extends Model
 
     protected $fillable = ['ServerName'];
 
+    protected $connection = 'assetbank';
     protected $primaryKey = 'Id';
 
     public function searchCriteria()
