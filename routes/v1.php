@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('asset/{id}', [AssetBankController::class, 'getAssetByID']);
+Route::put('asset/{id}', [AssetBankController::class, 'updateAssetByID']);
+Route::put('migrate/{id}', [AssetBankController::class, 'tagAsMigrated']);
 Route::get('/me', function (Request $request) {
     return $request->user();
 });

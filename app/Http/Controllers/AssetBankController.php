@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\UnauthenticatedToAssetBank;
 use App\Http\Asset;
 use GuzzleHttp\Client as Guzzle;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -15,14 +15,13 @@ use Illuminate\Support\Facades\Http;
 class AssetBankController extends Controller
 {
     /**
-     * @var string
-     */
-    private $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
-
-    /**
      * @var array
      */
     protected $guzzleOpts = [];
+    /**
+     * @var string
+     */
+    private $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
 
     /**
      * AssetBankController constructor.
@@ -39,18 +38,141 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param array|null $vars
-     * @return array
+     * @param    $id
+     * @param bool $new
+     * @return \App\Http\Resources\Asset
+     *
+     * @throws \Exception
      */
-    protected function guzzleOpts(array $vars = null)
+    public function getAssetByID($id, $new = false)
     {
-        if ($vars !== null) {
-            foreach ($vars as $key => $var) {
-                $this->guzzleOpts[$key] = $var;
+        $response = $this->newApi('assets/' . $id);
+        return $response;
+        return new \App\Http\Resources\Asset($response);
+    }
+
+    /**
+     * @param    $endpoint
+     * @param array $options
+     * @return object
+     */
+    public function newApi($endpoint, $options = []): object
+    {
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
+        } else {
+            $query = null;
+        }
+        try {
+            $response = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($endpoint . $query)
+                ->throw();
+
+            return $response->object();
+        } catch (RequestException $exception) {
+            if ($exception->getCode() == 403) {
+                return response()->json([
+                    'error' => 'The server could not authenticate with the Asset Bank API.'
+                ], 401);
             }
+            throw new \Exception($exception->getMessage());
+        }
+    }
+
+    /**
+     * @param    $endpoint
+     * @param array $options
+     */
+    public
+    function get($endpoint, $options = [])
+    {
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
+        } else {
+            $query = '';
         }
 
-        return $this->guzzleOpts;
+        $arrContextOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ];
+
+        $this->query = $query;
+        $this->endpoint = $endpoint;
+        $xml = file_get_contents($this->root_url . $endpoint . $query, false,
+            stream_context_create($arrContextOptions));
+        //  $this->result = simplexml_load_file($this->root_url.$endpoint.$query);
+        $this->result = simplexml_load_string($xml);
+        $this->count = count($this->result);
+
+        if (isset($this->result->assetSummary) && is_scalar($this->result->assetSummary)) {
+            foreach ($this->result->assetSummary as $asset) {
+                $asset->title = $this->get_asset_title($asset);
+                //    $moreDetails = simplexml_load_file($this->root_url."assets/".$asset->id)->url;
+                //    $asset->details = $moreDetails;
+                //    $asset->image = $this->root_url."assets/".$asset->id."/display";
+                //    $asset->contentUrl = $this->root_url."assets/".$asset->id;
+                //    $asset->displayUrl = $this->root_url."assets/".$asset->id;
+                unset($asset->displayUrl);
+                unset($asset->contentUrl);
+                // unset($asset->fullAssetUrl);
+                // unset($asset->displayAttributes);
+            }
+        }
+    }
+
+    public function tagAsMigrated(int $id)
+    {
+        return $this->updateAssetById($id, new Request(
+            request: [
+                'submitted' => true,
+                'attributes' => [
+                    [
+                        'id' => 730,
+                        'name' => 'Migration Status',
+                        'value' => '1',
+                        'label' => 'Migration Status'
+                    ]
+                ]
+            ]));
+    }
+
+    public function updateAssetById(int $id, Request $request)
+    {
+        $client = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ]);
+        $attributes = $this->newApi('assets/' . $id)->attributes;
+        $mergedArray = array_merge($attributes, $request->all());
+
+        return $client->put('assets/' . $id, [
+            'submitted' => true,
+            'attributes' => $mergedArray
+        ])->throw()->object();
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public
+    function relatedImages($id): JsonResponse
+    {
+        $asset = $this->getAssetInfoForWebsite($id, true);
+
+        $asset->relatedAssets = $this->relatedEvents($asset->event_name, $id, true);
+
+        return response()->json($asset);
     }
 
     /**
@@ -84,20 +206,48 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param \App\Http\Asset $asset
-     * @return bool
+     * @param    $endpoint
+     * @param array $options
+     * @return mixed
+     *
+     * @throws \Exception
      */
-    private function websiteCriteriaCheck(Asset $asset): bool
+    public
+    function api($endpoint, $options = [])
     {
-        if (in_array('Exclude DSignage', $asset->tags)) {
-            return false;
+        if (!empty($options)) {
+            $query = '?' . http_build_query($options);
+        } else {
+            $query = null;
         }
 
-        if (in_array('Best', $asset->rating) && in_array('Highlights', $asset->rating)) {
-            return true;
+        try {
+            $response = $this->guzzle->get($endpoint . $query, $this->guzzleOpts());
+        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
+            $resp = $e->getResponse();
+
+            if ($resp->getStatusCode() == 404) {
+                abort(404, $e->getMessage());
+            }
+            throw new \Exception($e->getMessage());
         }
 
-        return false;
+        return json_decode($response->getBody(), true);
+    }
+
+    /**
+     * @param array|null $vars
+     * @return array
+     */
+    protected function guzzleOpts(array $vars = null)
+    {
+        if ($vars !== null) {
+            foreach ($vars as $key => $var) {
+                $this->guzzleOpts[$key] = $var;
+            }
+        }
+
+        return $this->guzzleOpts;
     }
 
     /**
@@ -166,96 +316,20 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param    $id
-     * @param bool $new
-     * @return \App\Http\Resources\Asset
-     *
-     * @throws \Exception
+     * @param \App\Http\Asset $asset
+     * @return bool
      */
-    public function getAssetByID($id, $new = false)
+    private function websiteCriteriaCheck(Asset $asset): bool
     {
-        $response = $this->newApi('assets/' . $id);
-        return $response;
-        return new \App\Http\Resources\Asset($response);
-    }
-
-    /**
-     * @param    $endpoint
-     * @param array $options
-     * @return object
-     */
-    public function newApi($endpoint, $options = []): object
-    {
-        if (!empty($options)) {
-            $query = '?' . http_build_query($options);
-        } else {
-            $query = null;
-        }
-        try {
-            $response = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
-                ->withHeaders([
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ])
-                ->get($endpoint . $query)
-                ->throw();
-
-            return $response->object();
-        } catch (RequestException $exception) {
-            if ($exception->getCode() == 403) {
-                return response()->json([
-                    'error' => 'The server could not authenticate with the Asset Bank API.'
-                ], 401);
-            }
-            throw new \Exception($exception->getMessage());
-        }
-    }
-
-
-    /**
-     * @param    $endpoint
-     * @param array $options
-     * @return mixed
-     *
-     * @throws \Exception
-     */
-    public
-    function api($endpoint, $options = [])
-    {
-        if (!empty($options)) {
-            $query = '?' . http_build_query($options);
-        } else {
-            $query = null;
+        if (in_array('Exclude DSignage', $asset->tags)) {
+            return false;
         }
 
-        try {
-            $response = $this->guzzle->get($endpoint . $query, $this->guzzleOpts());
-        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
-            $resp = $e->getResponse();
-
-            if ($resp->getStatusCode() == 404) {
-                abort(404, $e->getMessage());
-            }
-            throw new \Exception($e->getMessage());
+        if (in_array('Best', $asset->rating) && in_array('Highlights', $asset->rating)) {
+            return true;
         }
 
-        return json_decode($response->getBody(), true);
-    }
-
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws \Exception
-     */
-    public
-    function relatedImages($id): JsonResponse
-    {
-        $asset = $this->getAssetInfoForWebsite($id, true);
-
-        $asset->relatedAssets = $this->relatedEvents($asset->event_name, $id, true);
-
-        return response()->json($asset);
+        return false;
     }
 
     /**
@@ -345,6 +419,21 @@ class AssetBankController extends Controller
     }
 
     /**
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public
+    function listAssetBankCategories(): JsonResponse
+    {
+        return $this->newGetCategories();
+        $categories = $this->get_categories();
+        $data = ['count' => count($categories), 'categories' => $categories];
+
+        return response()->json($data);
+    }
+
+    /**
      * @return array
      *
      * @throws \Exception
@@ -416,64 +505,5 @@ class AssetBankController extends Controller
         }
 
         return $output;
-    }
-
-    /**
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws \Exception
-     */
-    public
-    function listAssetBankCategories(): JsonResponse
-    {
-        return $this->newGetCategories();
-        $categories = $this->get_categories();
-        $data = ['count' => count($categories), 'categories' => $categories];
-
-        return response()->json($data);
-    }
-
-    /**
-     * @param    $endpoint
-     * @param array $options
-     */
-    public
-    function get($endpoint, $options = [])
-    {
-        if (!empty($options)) {
-            $query = '?' . http_build_query($options);
-        } else {
-            $query = '';
-        }
-
-        $arrContextOptions = [
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-            ],
-        ];
-
-        $this->query = $query;
-        $this->endpoint = $endpoint;
-        $xml = file_get_contents($this->root_url . $endpoint . $query, false,
-            stream_context_create($arrContextOptions));
-        //  $this->result = simplexml_load_file($this->root_url.$endpoint.$query);
-        $this->result = simplexml_load_string($xml);
-        $this->count = count($this->result);
-
-        if (isset($this->result->assetSummary) && is_scalar($this->result->assetSummary)) {
-            foreach ($this->result->assetSummary as $asset) {
-                $asset->title = $this->get_asset_title($asset);
-                //    $moreDetails = simplexml_load_file($this->root_url."assets/".$asset->id)->url;
-                //    $asset->details = $moreDetails;
-                //    $asset->image = $this->root_url."assets/".$asset->id."/display";
-                //    $asset->contentUrl = $this->root_url."assets/".$asset->id;
-                //    $asset->displayUrl = $this->root_url."assets/".$asset->id;
-                unset($asset->displayUrl);
-                unset($asset->contentUrl);
-                // unset($asset->fullAssetUrl);
-                // unset($asset->displayAttributes);
-            }
-        }
     }
 }
