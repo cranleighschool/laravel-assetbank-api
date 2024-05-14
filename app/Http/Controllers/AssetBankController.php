@@ -129,18 +129,19 @@ class AssetBankController extends Controller
 
     public function tagAsMigrated(int $id)
     {
-        return $this->updateAssetById($id, new Request(
-            request: [
-                'submitted' => true,
-                'attributes' => [
-                    [
-                        'id' => 730,
-                        'name' => 'Migration Status',
-                        'value' => '1',
-                        'label' => 'Migration Status'
-                    ]
+        $request = new Request();
+        $request->merge([
+            'submitted' => true,
+            'attributes' => [
+                [
+                    'id' => 730,
+                    'name' => 'Migration Status',
+                    'value' => '1',
+                    'label' => 'Migration Status'
                 ]
-            ]));
+            ]
+        ]);
+        return $this->updateAssetById($id, $request);
     }
 
     public function updateAssetById(int $id, Request $request)
