@@ -131,8 +131,6 @@ class AssetBankController extends Controller
     {
         $request = new Request();
         $request->merge([
-            'submitted' => true,
-            'attributes' => [
                 [
                     'id' => 730,
                     'name' => 'Migration Status',
@@ -140,7 +138,7 @@ class AssetBankController extends Controller
                     'label' => 'Migration Status'
                 ]
             ]
-        ]);
+        );
         return $this->updateAssetById($id, $request);
     }
 
