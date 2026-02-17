@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use AllowDynamicProperties;
 use App\Http\Asset;
 use Exception;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,17 +20,12 @@ use stdClass;
 /**
  * Class AssetBankController
  */
+#[AllowDynamicProperties]
 class AssetBankController extends Controller
 {
-    /**
-     * @var array
-     */
-    protected $guzzleOpts = [];
+    protected array $guzzleOpts = [];
 
-    /**
-     * @var string
-     */
-    private $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
+    private string $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
 
     /**
      * AssetBankController constructor.
@@ -44,24 +42,18 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param  bool  $new
-     * @return \App\Http\Resources\Asset
-     *
      * @throws Exception
      */
-    public function getAssetByID($id, $new = false)
+    public function getAssetByID($id, bool $new = false): ?object
     {
-        $response = $this->newApi('assets/'.$id);
-
-        return $response;
-
-        return new \App\Http\Resources\Asset($response);
+        return $this->newApi('assets/'.$id);
     }
 
     /**
-     * @param  array  $options
+     * @throws ConnectionException
+     * @throws Exception
      */
-    public function newApi($endpoint, $options = []): object
+    public function newApi(string $endpoint, array $options = []): object
     {
         if (! empty($options)) {
             $query = '?'.http_build_query($options);
@@ -89,9 +81,10 @@ class AssetBankController extends Controller
     }
 
     /**
+     * @param  string  $endpoint
      * @param  array  $options
      */
-    public function get($endpoint, $options = [])
+    public function get(string $endpoint, array $options = [])
     {
         if (! empty($options)) {
             $query = '?'.http_build_query($options);
@@ -180,7 +173,7 @@ class AssetBankController extends Controller
      *
      * @throws Exception
      */
-    public function getAssetInfoForWebsite($id, $raw = false)
+    public function getAssetInfoForWebsite(int $id, bool $raw = false): object
     {
         $response = $this->api('assets/'.$id);
         $asset = new Asset($id);
@@ -204,12 +197,14 @@ class AssetBankController extends Controller
     }
 
     /**
+     * @param  string  $endpoint
      * @param  array  $options
      * @return mixed
      *
+     * @throws GuzzleException
      * @throws Exception
      */
-    public function api($endpoint, $options = [])
+    public function api(string $endpoint, array $options = [])
     {
         if (! empty($options)) {
             $query = '?'.http_build_query($options);
@@ -226,13 +221,13 @@ class AssetBankController extends Controller
             throw new Exception($e->getMessage());
         }
 
-        return json_decode($response->getBody(), true);
+        return json_decode((string) $response->getBody(), true);
     }
 
     /**
      * @return array
      */
-    protected function guzzleOpts(?array $vars = null)
+    protected function guzzleOpts(?array $vars = null): array
     {
         if ($vars !== null) {
             foreach ($vars as $key => $var) {
@@ -296,7 +291,7 @@ class AssetBankController extends Controller
     /**
      * @return array
      */
-    private function simplify_tag_list($tags)
+    private function simplify_tag_list($tags): array
     {
         return array_values(array_unique($tags));
     }
@@ -318,9 +313,9 @@ class AssetBankController extends Controller
      * @param  bool  $raw
      * @return JsonResponse|stdClass
      *
-     * @throws Exception
+     * @throws Exception|GuzzleException
      */
-    public function relatedEvents($searchTerm, ?string $exclude = null, $raw = false)
+    public function relatedEvents($searchTerm, ?string $exclude = null, bool $raw = false)
     {
         if ($exclude !== null) {
             $notinclude = array_map(function ($v) {
