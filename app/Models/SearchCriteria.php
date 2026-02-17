@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class SearchCriteria extends Model
 {
     use HasFactory;
+
     protected $table = 'searchcriteria';
 
     protected $connection = 'assetbank';

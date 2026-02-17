@@ -1,14 +1,19 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\EventServiceProvider;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\AuthServiceProvider;
+use Illuminate\Auth\Passwords\PasswordResetServiceProvider;
 use Illuminate\Broadcasting\BroadcastServiceProvider;
 use Illuminate\Bus\BusServiceProvider;
 use Illuminate\Cache\CacheServiceProvider;
-use Illuminate\Foundation\Providers\ConsoleSupportServiceProvider;
 use Illuminate\Cookie\CookieServiceProvider;
 use Illuminate\Database\DatabaseServiceProvider;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Encryption\EncryptionServiceProvider;
 use Illuminate\Filesystem\FilesystemServiceProvider;
+use Illuminate\Foundation\Providers\ConsoleSupportServiceProvider;
 use Illuminate\Foundation\Providers\FoundationServiceProvider;
 use Illuminate\Hashing\HashServiceProvider;
 use Illuminate\Mail\MailServiceProvider;
@@ -17,16 +22,9 @@ use Illuminate\Pagination\PaginationServiceProvider;
 use Illuminate\Pipeline\PipelineServiceProvider;
 use Illuminate\Queue\QueueServiceProvider;
 use Illuminate\Redis\RedisServiceProvider;
-use Illuminate\Auth\Passwords\PasswordResetServiceProvider;
 use Illuminate\Session\SessionServiceProvider;
-use Illuminate\Translation\TranslationServiceProvider;
-use Illuminate\Validation\ValidationServiceProvider;
-use Illuminate\View\ViewServiceProvider;
-use App\Providers\AppServiceProvider;
-use App\Providers\EventServiceProvider;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
@@ -37,7 +35,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
@@ -57,10 +54,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
+use Illuminate\Translation\TranslationServiceProvider;
+use Illuminate\Validation\ValidationServiceProvider;
+use Illuminate\View\ViewServiceProvider;
 
 return [
 
@@ -232,7 +232,7 @@ return [
          * Application Service Providers...
          */
         AppServiceProvider::class,
-        App\Providers\AuthServiceProvider::class,
+        \App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         EventServiceProvider::class,
         RouteServiceProvider::class,

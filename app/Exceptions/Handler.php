@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,7 +46,7 @@ class Handler extends ExceptionHandler
     /**
      * Render an exception into an HTTP response.
      *
-     * @param Request $request
+     * @param  Request  $request
      * @return Response
      *
      * @throws Throwable

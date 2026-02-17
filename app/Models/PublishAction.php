@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class PublishAction extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
 
     protected $table = 'publishaction';

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Exception;
-use GuzzleHttp\Exception\BadResponseException;
-use stdClass;
 use App\Http\Asset;
+use Exception;
 use GuzzleHttp\Client as Guzzle;
+use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use stdClass;
 
 /**
  * Class AssetBankController

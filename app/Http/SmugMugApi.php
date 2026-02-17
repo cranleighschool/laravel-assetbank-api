@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Http\Traits\AnnualSmugmugSetup;
 use Exception;
 use JsonException;
-use App\Http\Traits\AnnualSmugmugSetup;
 use phpSmug\Client;
 
 /**
