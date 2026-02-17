@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use ErrorException;
 use App\Http\SmugMugApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -39,7 +42,7 @@ class SmugMugController extends Controller
                         'thumb' => $this->smugmug->client->get($node->Uris->NodeCoverImage)->Image->ThumbnailUrl,
                     ];
                 }
-            } catch (\ErrorException $exception) {
+            } catch (ErrorException $exception) {
                 Log::error($exception->getMessage());
             }
             $houseFolder->children = $nodes;

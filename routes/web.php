@@ -41,7 +41,7 @@ Route::get('related-events/{searchTerm}/{exclude?}', [AssetBankController::class
 |
 */
 
-Route::group(['prefix' => 'forwebsite'], function () {
+Route::group(['prefix' => 'forwebsite'], function (): void {
     Route::get('{id}', [AssetBankController::class, 'getAssetInfoForWebsite'])->name('assetInfoWeb');
     Route::get('{id}/photo/{target?}', [ImageController::class, 'displayImage'])->name('resizedImage');
     Route::get('{id}/related', [AssetBankController::class, 'relatedImages'])->name('relatedImages');
@@ -57,7 +57,7 @@ Route::group(['prefix' => 'forwebsite'], function () {
 |
 */
 
-Route::group(['prefix' => 'database'], function () {
+Route::group(['prefix' => 'database'], function (): void {
     Route::get('check/{path?}', [AssetBankUpdateController::class, 'searchCriteria']);
     Route::get('publish/{path}');
     Route::get('update/{path}');
@@ -73,7 +73,7 @@ Route::group(['prefix' => 'database'], function () {
 |
 */
 
-Route::group(['prefix' => 'smugmug'], function () {
+Route::group(['prefix' => 'smugmug'], function (): void {
     Route::get('{house}', [SmugMugController::class, 'getHouseAlbumsOrFolders']);
     // Route::get('{username}/{endpoint}', 'SmugMugController@base');
 });

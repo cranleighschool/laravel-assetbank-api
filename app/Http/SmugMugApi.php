@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http;
 
+use Exception;
+use JsonException;
 use App\Http\Traits\AnnualSmugmugSetup;
 use phpSmug\Client;
 
@@ -18,7 +22,7 @@ class SmugMugApi
     private $appName = 'Asset Bank Api';
 
     /**
-     * @var \phpSmug\Client
+     * @var Client
      */
     public $client;
 
@@ -31,13 +35,11 @@ class SmugMugApi
      * SmugMugApi constructor.
      *
      *
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function __construct(string $configJson)
     {
-        if (! file_exists(base_path($configJson))) {
-            throw new \Exception("I can't find ".$configJson.' to read the config from.');
-        }
+        throw_unless(file_exists(base_path($configJson)), Exception::class, "I can't find ".$configJson.' to read the config from.');
 
         $config = json_decode(
             file_get_contents(base_path($configJson)),

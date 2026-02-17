@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
+use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -10,14 +14,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class Asset extends JsonResource
 {
     /**
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     private $attrs;
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      */
     public function toArray($request): array
     {

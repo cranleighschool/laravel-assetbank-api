@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Request;
+use Exception;
+use SimpleXMLElement;
 use App\Models\PublishAction;
 use App\Models\SearchCriteria;
 
@@ -16,7 +21,7 @@ class AssetBankUpdateController extends Controller
 
     public function testSQL()
     {
-        $actions = PublishAction::get();
+        $actions = PublishAction::query()->get();
         $list = [];
         foreach ($actions as $action) {
             $list[$action->Id] = $action->runtime;
@@ -36,8 +41,8 @@ class AssetBankUpdateController extends Controller
     public function run_database_update()
     {
         $updated = [];
-        if (isset($_GET['days']) && $_GET['days'] > 0) {
-            $days = $_GET['days'];
+        if (Request::query('days') !== null && Request::query('days') > 0) {
+            $days = Request::query('days');
         } else {
             $days = 1;
         }
@@ -55,7 +60,7 @@ class AssetBankUpdateController extends Controller
     {
         if (empty($category_name)) {
             $categories = config('cranleigh.categories');
-            throw new \Exception('Category Name Not Set, choose one of: ['.implode(',', $categories).']', 500);
+            throw new Exception('Category Name Not Set, choose one of: ['.implode(',', $categories).']', 500);
         }
 
         $action = PublishAction::with('searchCriteria')->where('Path', 'LIKE',
@@ -84,9 +89,9 @@ class AssetBankUpdateController extends Controller
         // If auto update doesn't work, then try changing the startTime...
         $action->update(['startTime' => $new_startTime, 'IntervalTypeId' => 1]);
 
-        $SearchCriteria = SearchCriteria::where('Id', $result->SearchCriteriaId);
+        $SearchCriteria = SearchCriteria::query()->where('Id', $result->SearchCriteriaId);
         $result = $SearchCriteria->get()->first();
-        $newObj = new \SimpleXMLElement($result->SearchCriteriaXml);
+        $newObj = new SimpleXMLElement($result->SearchCriteriaXml);
         $yesterday = strtotime($previous_day) * 1000;
         $newObj->dateRanges->lower = $yesterday;
         $newObj->lowerDateToRefine->entry->value = date('c', strtotime($previous_day));
@@ -121,11 +126,9 @@ class AssetBankUpdateController extends Controller
         $searchCriteria = $this->db->getOne('searchcriteria');
 
         $searchXML = $searchCriteria['SearchCriteriaXml'];
-        if ($searchXML == null) {
-            throw new NotFoundException($request, $response);
-        }
+        throw_if($searchXML == null, NotFoundException::class, $request, $response);
 
-        $new = new \SimpleXMLElement($searchXML);
+        $new = new SimpleXMLElement($searchXML);
 
         $yesterday = time() * 1000;
         $new->dateRanges->lower = $yesterday;

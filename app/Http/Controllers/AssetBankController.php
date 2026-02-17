@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use Exception;
+use GuzzleHttp\Exception\BadResponseException;
+use stdClass;
 use App\Http\Asset;
 use GuzzleHttp\Client as Guzzle;
 use Illuminate\Http\Client\RequestException;
@@ -42,7 +47,7 @@ class AssetBankController extends Controller
      * @param  bool  $new
      * @return \App\Http\Resources\Asset
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAssetByID($id, $new = false)
     {
@@ -79,7 +84,7 @@ class AssetBankController extends Controller
                     'error' => 'The server could not authenticate with the Asset Bank API.',
                 ], 401);
             }
-            throw new \Exception($exception->getMessage());
+            throw new Exception($exception->getMessage());
         }
     }
 
@@ -158,7 +163,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function relatedImages($id): JsonResponse
     {
@@ -171,9 +176,9 @@ class AssetBankController extends Controller
 
     /**
      * @param  bool  $raw
-     * @return \App\Http\Asset|\Illuminate\Http\JsonResponse
+     * @return Asset|JsonResponse
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAssetInfoForWebsite($id, $raw = false)
     {
@@ -202,7 +207,7 @@ class AssetBankController extends Controller
      * @param  array  $options
      * @return mixed
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function api($endpoint, $options = [])
     {
@@ -214,13 +219,11 @@ class AssetBankController extends Controller
 
         try {
             $response = $this->guzzle->get($endpoint.$query, $this->guzzleOpts());
-        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
+        } catch (BadResponseException $e) {
             $resp = $e->getResponse();
 
-            if ($resp->getStatusCode() == 404) {
-                abort(404, $e->getMessage());
-            }
-            throw new \Exception($e->getMessage());
+            abort_if($resp->getStatusCode() == 404, 404, $e->getMessage());
+            throw new Exception($e->getMessage());
         }
 
         return json_decode($response->getBody(), true);
@@ -245,9 +248,7 @@ class AssetBankController extends Controller
         foreach ($attributes as $attribute) {
             // Is this asset marked as Suitable for Publication
             if ($attribute['id'] == 705) {
-                if ($attribute['value'] !== 'Yes') {
-                    abort(403, 'Image is not set as suitable for publication');
-                }
+                abort_if($attribute['value'] !== 'Yes', 403, 'Image is not set as suitable for publication');
             }
 
             // Get Categories
@@ -315,9 +316,9 @@ class AssetBankController extends Controller
 
     /**
      * @param  bool  $raw
-     * @return \Illuminate\Http\JsonResponse|\stdClass
+     * @return JsonResponse|stdClass
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function relatedEvents($searchTerm, ?string $exclude = null, $raw = false)
     {
@@ -334,7 +335,7 @@ class AssetBankController extends Controller
 
         $response = $this->api('asset-search', $args);
 
-        $result = new \stdClass;
+        $result = new stdClass;
 
         $result->assets = [];
 
@@ -393,7 +394,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function listAssetBankCategories(): JsonResponse
     {
@@ -405,7 +406,7 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function newGetCategories(): array
     {
@@ -439,7 +440,7 @@ class AssetBankController extends Controller
         foreach ($this->result as $tlc) {
             if ($tlc->children && is_object($tlc->children)) {
                 $children = $this->loop($tlc->children);
-                $cats = $cats + $children;
+                $cats += $children;
             } else {
             }
 
@@ -465,7 +466,7 @@ class AssetBankController extends Controller
             $output[(int) $child->id] = (string) $child->name;
             if ($child->children && is_object($child->children)) {
                 $children = $this->loop($child->children);
-                $output = $output + $children;
+                $output += $children;
             }
         }
 
