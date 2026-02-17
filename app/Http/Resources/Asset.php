@@ -18,7 +18,6 @@ class Asset extends JsonResource
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return array
      */
     public function toArray($request): array
     {
@@ -31,14 +30,11 @@ class Asset extends JsonResource
             'parents' => $this->parents,
             'contentUrl' => $this->contentUrl,
             'displayUrl' => $this->displayUrl,
-            //'attributes' => $this->attributes,
+            // 'attributes' => $this->attributes,
             'attrs' => $this->getAttrs(),
         ];
     }
 
-    /**
-     * @return array
-     */
     private function getAttrs(): array
     {
         $attrs = [];

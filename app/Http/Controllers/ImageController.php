@@ -12,7 +12,7 @@ class ImageController extends Controller
         $target_height = $target;
         $target_width = $target;
 
-        $assetBank = new AssetBankController();
+        $assetBank = new AssetBankController;
 
         $response = $assetBank->api('assets/'.$id);
         $photo = $response['displayUrl'];

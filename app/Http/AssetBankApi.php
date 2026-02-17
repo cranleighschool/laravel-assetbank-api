@@ -34,8 +34,6 @@ class AssetBankApi
     }
 
     /**
-     * @param  string  $method
-     * @param  string  $endpoint
      * @param  array  $options
      * @return object
      */

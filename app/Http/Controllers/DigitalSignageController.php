@@ -16,7 +16,7 @@ class DigitalSignageController extends Controller
     public function setupSenior()
     {
         //
-        //ASSETBANK INTEGRATION
+        // ASSETBANK INTEGRATION
 
         // Every category the image is included in MUST appear here otherwise it will not be pulled through.
         $incCats = [

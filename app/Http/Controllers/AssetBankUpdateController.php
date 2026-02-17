@@ -51,7 +51,7 @@ class AssetBankUpdateController extends Controller
         return response()->json($result);
     }
 
-    public function searchCriteria(string $category_name = null)
+    public function searchCriteria(?string $category_name = null)
     {
         if (empty($category_name)) {
             $categories = config('cranleigh.categories');
@@ -146,6 +146,7 @@ class AssetBankUpdateController extends Controller
         $this->db->where('Path', ['LIKE' => '%'.$args['path']]);
         $path = $this->db->getOne('publishaction');
         $path['searchCriteria'] = $newCriteria;
+
         //		$path = array("updated"=>"think so", "category" => $args['path']);
         //		return $this->view->render($response, $path, 200);
         return $newCriteria;

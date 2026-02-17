@@ -12,49 +12,22 @@ class Asset
      */
     public $asset_id;
 
-    /**
-     * @var
-     */
     public $title;
 
-    /**
-     * @var
-     */
     public $description;
 
-    /**
-     * @var
-     */
     public $event_name;
 
-    /**
-     * @var
-     */
     public $dateAdded;
 
-    /**
-     * @var
-     */
     public $photographer;
 
-    /**
-     * @var
-     */
     public $photo;
 
-    /**
-     * @var
-     */
     public $websiteQuality;
 
-    /**
-     * @var
-     */
     public $heroQuality;
 
-    /**
-     * @var
-     */
     public $assetBankUri;
 
     /**
@@ -89,8 +62,6 @@ class Asset
 
     /**
      * Asset constructor.
-     *
-     * @param  int  $asset_id
      */
     public function __construct(int $asset_id)
     {
@@ -100,9 +71,6 @@ class Asset
         $this->setUris();
     }
 
-    /**
-     * @param  string  $title
-     */
     public function setTitle(string $title): void
     {
         if ($title) {
@@ -110,9 +78,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $description
-     */
     public function setDescription(string $description): void
     {
         if ($description) {
@@ -120,9 +85,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $event_name
-     */
     public function setEventName(string $event_name): void
     {
         if ($event_name) {
@@ -130,9 +92,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $photographer
-     */
     public function setPhotographer(string $photographer): void
     {
         if ($photographer) {
@@ -140,9 +99,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $value
-     */
     protected function explodeCategories(string $value): void
     {
         $cats = explode('/', $value);
@@ -151,9 +107,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $value
-     */
     public function setCategories(string $value): void
     {
         $categories = [];
@@ -181,6 +134,7 @@ class Asset
                 foreach ($split as $cat) {
                     $this->addTag($this->sanitizeCategory($cat));
                 }
+
                 continue;
             }
             $this->addTag($this->sanitizeCategory($category));
@@ -188,10 +142,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $category
-     * @return string
-     */
     private function sanitizeCategory(string $category): string
     {
         $category = trim($category);
@@ -201,9 +151,6 @@ class Asset
         return trim($category);
     }
 
-    /**
-     * @param  string  $date
-     */
     public function setDateAdded(string $date): void
     {
         if ($date) {
@@ -211,9 +158,6 @@ class Asset
         }
     }
 
-    /**
-     * @param  string  $tag
-     */
     public function addTag(string $tag): void
     {
         array_push($this->tags, trim($tag));
@@ -227,10 +171,6 @@ class Asset
         $this->heroQuality = $this->getPhotoUri(2880);
     }
 
-    /**
-     * @param  int  $size
-     * @return string
-     */
     private function getPhotoUri(int $size): string
     {
         return route('resizedImage', [$this->id, $size]);

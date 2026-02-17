@@ -44,7 +44,7 @@ return [
         ],
         'assetbank' => [
             'driver' => 'mysql',
-            //'url' => env('DATABASE_URL'),
+            // 'url' => env('DATABASE_URL'),
             'host' => env('ASSET_BANK_DB_HOST', '127.0.0.1'),
             'port' => env('ASSET_BANK_DB_PORT', '3306'),
             'database' => env('ASSET_BANK_DB_DATABASE', 'assetbank'),
@@ -57,9 +57,6 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
         ],
         'mysql' => [
             'driver' => 'mysql',
@@ -76,9 +73,6 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
         ],
 
         'pgsql' => [

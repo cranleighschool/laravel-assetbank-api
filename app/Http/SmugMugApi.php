@@ -30,7 +30,6 @@ class SmugMugApi
     /**
      * SmugMugApi constructor.
      *
-     * @param  string  $configJson
      *
      * @throws \JsonException
      */

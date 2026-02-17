@@ -12,11 +12,9 @@ trait AnnualSmugmugSetup
     public static $HOUSE_PHOTOS = 'House Photos';
 
     /**
-     * @param  string  $house
-     * @param  string|null  $endpoint
      * @return mixed
      */
-    public function getHouseFolder(string $house, string $endpoint = null)
+    public function getHouseFolder(string $house, ?string $endpoint = null)
     {
         try {
             return $this->client->get('folder/user/'.$this->username.'/'.$this->getThisYear().'/'.self::customSlugger(self::$HOUSE_PHOTOS).'/'.$house.$endpoint);
@@ -34,8 +32,6 @@ trait AnnualSmugmugSetup
     /**
      * Smugmug is divided into folders by year: eg 2019-2020 (for the Academic year of 2019).
      * This function will get the right folder for this year, based on the current month.
-     *
-     * @return string
      */
     private function getThisYear(): string
     {
@@ -51,10 +47,6 @@ trait AnnualSmugmugSetup
         return $year;
     }
 
-    /**
-     * @param  string  $input
-     * @return string
-     */
     public static function customSlugger(string $input): string
     {
         return implode('-',
@@ -109,6 +101,7 @@ trait AnnualSmugmugSetup
             if ($exception->getCode() === 404) {
                 // Create the top level folders
                 $this->createTopLevelFolders();
+
                 // Try this method again...
                 return call_user_func([$this, __METHOD__]);
             } else {
