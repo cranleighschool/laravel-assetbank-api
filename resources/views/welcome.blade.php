@@ -85,7 +85,8 @@
                 </div>
 
                 <div class="links">
-                    <a href="https://photos.cranleigh.org">Asset Bank</a>
+                    <a href="https://photos.cranleigh.org">(Old) Asset Bank</a>
+                    <a href="https://assetbank.cranleigh.org">(New) Asset Bank</a>
                     <a href="https://smugmug.cranleigh.org">Smugmug</a>
                 </div>
             </div>
