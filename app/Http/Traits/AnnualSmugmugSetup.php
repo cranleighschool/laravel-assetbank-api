@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Traits;
 
 use Carbon\Carbon;
+use Carbon\Constants\UnitValue;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 trait AnnualSmugmugSetup
 {
-    public static $HOUSE_PHOTOS = 'House Photos';
+    public static string $HOUSE_PHOTOS = 'House Photos';
 
-    /**
-     * @return mixed
-     */
     public function getHouseFolder(string $house, ?string $endpoint = null)
     {
         try {
@@ -39,7 +37,7 @@ trait AnnualSmugmugSetup
     {
         $now = now();
         // Essentially, if it's August or later in the year, then we get "This year - Next Year"
-        if ($now->month >= Carbon::AUGUST) {
+        if ($now->month >= UnitValue::AUGUST) {
             $year = sprintf('%s-%s', $now->year, $now->year + 1);
         } else {
             // If it's before August, then our academic year is technically "Last Year - This Year"
@@ -65,7 +63,7 @@ trait AnnualSmugmugSetup
     /**
      * @return array
      */
-    private function createHouseFolders()
+    private function createHouseFolders(): array
     {
         $folders = config('cranleigh.houses');
         $smugFolders = [];
@@ -92,9 +90,6 @@ trait AnnualSmugmugSetup
         return $smugFolders;
     }
 
-    /**
-     * @return string
-     */
     public function getThisYearsHousePhotosFolder()
     {
         try {
@@ -112,9 +107,6 @@ trait AnnualSmugmugSetup
         }
     }
 
-    /**
-     * @return mixed
-     */
     public function getThisYearsFolder()
     {
         try {
@@ -135,7 +127,7 @@ trait AnnualSmugmugSetup
     /**
      * @return array
      */
-    private function createTopLevelFolders()
+    private function createTopLevelFolders(): array
     {
         $folders = [
             'Misc' => 'Public',

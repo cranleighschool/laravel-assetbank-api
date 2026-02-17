@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Http;
 
 use GuzzleHttp\Client as Guzzle;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 class AssetBankApi
 {
     /**
-     * @var \GuzzleHttp\Client
+     * @var Guzzle
      */
-    public $api;
+    public Guzzle $api;
 
-    public const API_ROOT = 'https://photos.cranleigh.org/asset-bank/rest/';
+    public const string API_ROOT = 'https://photos.cranleigh.org/asset-bank/rest/';
 
     /**
      * AssetBankController constructor.
@@ -30,16 +32,20 @@ class AssetBankApi
         ]);
     }
 
-    public function get(string $endpoint, array $options = [])
+    /**
+     * @throws RequestException
+     * @throws ConnectionException
+     */
+    public function get(string $endpoint, array $options = []): ?object
     {
         return $this->request('GET', $endpoint, $options);
     }
 
     /**
-     * @param  array  $options
-     * @return object
+     * @throws RequestException
+     * @throws ConnectionException
      */
-    public function request(string $method, string $endpoint, $options = [])
+    public function request(string $method, string $endpoint, $options = []): ?object
     {
         $method = strtoupper($method);
         $response = Http::withHeaders([

@@ -8,6 +8,7 @@ use App\Http\Traits\AnnualSmugmugSetup;
 use Exception;
 use JsonException;
 use phpSmug\Client;
+use Throwable;
 
 /**
  * Class SmugMugApi
@@ -19,12 +20,12 @@ class SmugMugApi
     /**
      * @var string
      */
-    private $appName = 'Asset Bank Api';
+    private string $appName = 'Asset Bank Api';
 
     /**
      * @var Client
      */
-    public $client;
+    public Client $client;
 
     /**
      * @var string
@@ -36,6 +37,7 @@ class SmugMugApi
      *
      *
      * @throws JsonException
+     * @throws Throwable
      */
     public function __construct(string $configJson)
     {
@@ -61,7 +63,7 @@ class SmugMugApi
         $this->setUsername();
     }
 
-    private function setUsername()
+    private function setUsername(): void
     {
         $this->username = $this->client->get('!authuser')->User->NickName;
     }

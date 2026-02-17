@@ -12,13 +12,13 @@ class Asset
     /**
      * @var int
      */
-    public $asset_id;
+    public int $asset_id;
 
-    public $title;
+    public string $title;
 
-    public $description;
+    public string $description;
 
-    public $event_name;
+    public string $event_name;
 
     public $dateAdded;
 
@@ -35,32 +35,32 @@ class Asset
     /**
      * @var array
      */
-    public $tags = [];
+    public array $tags = [];
 
     /**
      * @var array
      */
-    public $rating = [];
+    public array $rating = [];
 
     /**
      * @var bool
      */
-    public $websiteCriteriaCheck = false;
+    public bool $websiteCriteriaCheck = false;
 
     /**
      * @var int
      */
-    private $id;
+    private int $id;
 
     /**
      * @var array
      */
-    protected $categories = [];
+    protected array $categories = [];
 
     /**
      * @var string
      */
-    protected $assetBankRoot = 'https://photos.cranleigh.org/asset-bank/';
+    protected string $assetBankRoot = 'https://photos.cranleigh.org/asset-bank/';
 
     /**
      * Asset constructor.
@@ -105,7 +105,7 @@ class Asset
     {
         $cats = explode('/', $value);
         foreach ($cats as $single_category) {
-            array_push($this->categories, $single_category);
+            $this->categories[] = $single_category;
         }
     }
 
@@ -162,7 +162,7 @@ class Asset
 
     public function addTag(string $tag): void
     {
-        array_push($this->tags, trim($tag));
+        $this->tags[] = trim($tag);
     }
 
     private function setUris(): void
