@@ -6,26 +6,13 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Collection;
 
-/**
- * Class Asset
- */
 class Asset extends JsonResource
 {
-    /**
-     * @var Collection
-     */
-    private $attrs;
-
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  Request  $request
-     */
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
-        $this->attrs = collect($this->attributes);
+        // Build a name→value lookup once rather than scanning the collection per attribute
+        $attrMap = collect($this->attributes)->keyBy('name')->map->value->toArray();
 
         return [
             'url' => $this->url,
@@ -34,37 +21,10 @@ class Asset extends JsonResource
             'parents' => $this->parents,
             'contentUrl' => $this->contentUrl,
             'displayUrl' => $this->displayUrl,
-            // 'attributes' => $this->attributes,
-            'attrs' => $this->getAttrs(),
+            'attrs' => array_map(
+                fn (mixed $v) => $v === '' ? null : $v,
+                $attrMap
+            ),
         ];
-    }
-
-    private function getAttrs(): array
-    {
-        $attrs = [];
-        foreach ($this->attrs as $attr) {
-            $attrs[$attr->name] = $this->getAttribute($attr->name);
-        }
-
-        return $attrs;
-    }
-
-    /**
-     * @param  \App\Http\Resources\string  $name
-     * @return |null
-     */
-    private function getAttribute(string $name)
-    {
-        $filtered = $this->attrs->filter(function ($item) use ($name) {
-            if ($item->name === $name) {
-                return $item;
-            }
-        });
-        $value = $filtered->first()->value;
-        if ($value === '') {
-            return null;
-        }
-
-        return $value;
     }
 }

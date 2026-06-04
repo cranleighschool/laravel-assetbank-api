@@ -4,47 +4,41 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use AllowDynamicProperties;
 use App\Http\Asset;
 use Exception;
-use GuzzleHttp\Client as Guzzle;
-use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use SimpleXMLElement;
 use stdClass;
 
-/**
- * Class AssetBankController
- */
-#[AllowDynamicProperties]
 class AssetBankController extends Controller
 {
-    protected array $guzzleOpts = [];
+    private const string API_ROOT = 'https://photos.cranleigh.org/asset-bank/rest/';
 
-    private string $root_url = 'https://photos.cranleigh.org/asset-bank/rest/';
+    // AssetBank attribute IDs
+    private const int ATTR_SUITABLE_FOR_PUBLICATION = 705;
+    private const int ATTR_CATEGORIES = 17;
+    private const int ATTR_DESCRIPTION = 4;
+    private const int ATTR_YEAR_GROUPS = 718;
+    private const int ATTR_TITLE = 3;
+    private const int ATTR_PHOTOGRAPHER = 706;
+    private const int ATTR_RATINGS = 709;
+    private const int ATTR_EVENT_NAME = 716;
+    private const int ATTR_DATE_ADDED = 8;
+    private const int ATTR_MIGRATION_STATUS = 730;
 
-    /**
-     * AssetBankController constructor.
-     */
-    public function __construct()
-    {
-        $this->guzzle = new Guzzle([
-            'base_uri' => $this->root_url,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ],
-        ]);
-    }
+    /** @var SimpleXMLElement|null Set by the legacy get() method for XML-based endpoints */
+    protected ?SimpleXMLElement $result = null;
+
+    protected int $count = 0;
 
     /**
      * @throws Exception
      */
-    public function getAssetByID($id, bool $new = false): ?object
+    public function getAssetByID(mixed $id, bool $new = false): ?object
     {
         return $this->newApi('assets/'.$id);
     }
@@ -55,21 +49,17 @@ class AssetBankController extends Controller
      */
     public function newApi(string $endpoint, array $options = []): object
     {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
-        } else {
-            $query = null;
-        }
+        $query = ! empty($options) ? '?'.http_build_query($options) : null;
+
         try {
-            $response = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
+            return Http::baseUrl(self::API_ROOT)
                 ->withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ])
                 ->get($endpoint.$query)
-                ->throw();
-
-            return $response->object();
+                ->throw()
+                ->object();
         } catch (RequestException $exception) {
             if ($exception->getCode() == 403) {
                 return response()->json([
@@ -81,67 +71,72 @@ class AssetBankController extends Controller
     }
 
     /**
-     * @param  string  $endpoint
-     * @param  array  $options
+     * Fetches a JSON endpoint from the AssetBank API and returns the decoded array.
+     *
+     * @throws Exception
      */
-    public function get(string $endpoint, array $options = [])
+    public function api(string $endpoint, array $options = []): array
     {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
-        } else {
-            $query = '';
+        try {
+            return Http::baseUrl(self::API_ROOT)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($endpoint, $options)
+                ->throw()
+                ->json();
+        } catch (RequestException $e) {
+            abort_if($e->response->status() === 404, 404, $e->getMessage());
+            throw new Exception($e->getMessage());
         }
+    }
 
-        $arrContextOptions = [
+    /**
+     * Fetches an XML endpoint from the AssetBank API, storing results in $this->result.
+     *
+     * Note: SSL certificate verification is intentionally disabled here for the legacy
+     * XML API endpoint, which sits behind a self-signed certificate on the internal network.
+     */
+    public function get(string $endpoint, array $options = []): void
+    {
+        $query = ! empty($options) ? '?'.http_build_query($options) : '';
+
+        $context = stream_context_create([
             'ssl' => [
                 'verify_peer' => false,
                 'verify_peer_name' => false,
             ],
-        ];
+        ]);
 
-        $this->query = $query;
-        $this->endpoint = $endpoint;
-        $xml = file_get_contents($this->root_url.$endpoint.$query, false,
-            stream_context_create($arrContextOptions));
-        //  $this->result = simplexml_load_file($this->root_url.$endpoint.$query);
-        $this->result = simplexml_load_string($xml);
-        $this->count = count($this->result);
+        $xml = file_get_contents(self::API_ROOT.$endpoint.$query, false, $context);
+        $this->result = simplexml_load_string($xml ?: '') ?: null;
+        $this->count = $this->result ? count($this->result) : 0;
 
         if (isset($this->result->assetSummary) && is_scalar($this->result->assetSummary)) {
             foreach ($this->result->assetSummary as $asset) {
                 $asset->title = $this->get_asset_title($asset);
-                //    $moreDetails = simplexml_load_file($this->root_url."assets/".$asset->id)->url;
-                //    $asset->details = $moreDetails;
-                //    $asset->image = $this->root_url."assets/".$asset->id."/display";
-                //    $asset->contentUrl = $this->root_url."assets/".$asset->id;
-                //    $asset->displayUrl = $this->root_url."assets/".$asset->id;
-                unset($asset->displayUrl);
-                unset($asset->contentUrl);
-                // unset($asset->fullAssetUrl);
-                // unset($asset->displayAttributes);
+                unset($asset->displayUrl, $asset->contentUrl);
             }
         }
     }
 
-    public function tagAsMigrated(int $id)
+    public function tagAsMigrated(int $id): mixed
     {
         $request = new Request;
-        $request->merge([
-            [
-                'id' => 730,
-                'name' => 'Migration Status',
-                'value' => '1',
-                'label' => 'Migration Status',
-            ],
-        ]
-        );
+        $request->merge([[
+            'id' => self::ATTR_MIGRATION_STATUS,
+            'name' => 'Migration Status',
+            'value' => '1',
+            'label' => 'Migration Status',
+        ]]);
 
         return $this->updateAssetById($id, $request);
     }
 
-    public function updateAssetById(int $id, Request $request)
+    public function updateAssetById(int $id, Request $request): mixed
     {
-        $client = Http::baseUrl('https://photos.cranleigh.org/asset-bank/rest/')
+        $client = Http::baseUrl(self::API_ROOT)
             ->withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
@@ -158,22 +153,26 @@ class AssetBankController extends Controller
     /**
      * @throws Exception
      */
-    public function relatedImages($id): JsonResponse
+    public function relatedImages(int $id): JsonResponse
     {
-        $asset = $this->getAssetInfoForWebsite($id, true);
-
-        $asset->relatedAssets = $this->relatedEvents($asset->event_name, $id, true);
+        $asset = $this->buildAsset($id);
+        $asset->relatedAssets = $this->buildRelatedEvents($asset->event_name, (string) $id);
 
         return response()->json($asset);
     }
 
     /**
-     * @param  bool  $raw
-     * @return Asset|JsonResponse
-     *
      * @throws Exception
      */
-    public function getAssetInfoForWebsite(int $id, bool $raw = false): object
+    public function getAssetInfoForWebsite(int $id): JsonResponse
+    {
+        return response()->json($this->buildAsset($id));
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function buildAsset(int $id): Asset
     {
         $response = $this->api('assets/'.$id);
         $asset = new Asset($id);
@@ -182,118 +181,33 @@ class AssetBankController extends Controller
 
         $this->setReadableAttributes($asset, $response['attributes']);
 
-        $asset->tags = $this->simplify_tag_list($asset->tags);
+        $asset->tags = array_values(array_unique($asset->tags));
 
         $asset->websiteCriteriaCheck = $this->websiteCriteriaCheck($asset);
 
-        // Uncomment the line below to help with debugging
-        // $asset->attributes = $response['attributes'];
-
-        if ($raw === true) {
-            return $asset;
-        } else {
-            return response()->json($asset);
-        }
+        return $asset;
     }
 
-    /**
-     * @param  string  $endpoint
-     * @param  array  $options
-     * @return mixed
-     *
-     * @throws GuzzleException
-     * @throws Exception
-     */
-    public function api(string $endpoint, array $options = [])
-    {
-        if (! empty($options)) {
-            $query = '?'.http_build_query($options);
-        } else {
-            $query = null;
-        }
-
-        try {
-            $response = $this->guzzle->get($endpoint.$query, $this->guzzleOpts());
-        } catch (BadResponseException $e) {
-            $resp = $e->getResponse();
-
-            abort_if($resp->getStatusCode() == 404, 404, $e->getMessage());
-            throw new Exception($e->getMessage());
-        }
-
-        return json_decode((string) $response->getBody(), true);
-    }
-
-    /**
-     * @return array
-     */
-    protected function guzzleOpts(?array $vars = null): array
-    {
-        if ($vars !== null) {
-            foreach ($vars as $key => $var) {
-                $this->guzzleOpts[$key] = $var;
-            }
-        }
-
-        return $this->guzzleOpts;
-    }
-
-    private function setReadableAttributes(Asset $asset, $attributes): void
+    private function setReadableAttributes(Asset $asset, mixed $attributes): void
     {
         foreach ($attributes as $attribute) {
-            // Is this asset marked as Suitable for Publication
-            if ($attribute['id'] == 705) {
-                abort_if($attribute['value'] !== 'Yes', 403, 'Image is not set as suitable for publication');
-            }
-
-            // Get Categories
-            if ($attribute['id'] == 17) {
-                $asset->setCategories($attribute['value']);
-            }
-
-            // Get Description
-            if ($attribute['id'] == 4) {
-                $asset->setDescription($attribute['value']);
-            }
-
-            // Get the Year Groups
-            if ($attribute['id'] == 718 && $attribute['value']) {
-                $asset->addTag($attribute['value']);
-            }
-
-            // Get Title
-            if ($attribute['id'] == 3) {
-                $asset->setTitle($attribute['value']);
-            }
-
-            // Get Photographer's Name
-            if ($attribute['id'] == 706) {
-                $asset->setPhotographer($attribute['value']);
-            }
-
-            // Get Ratings as array
-            if ($attribute['id'] == 709) {
-                $asset->rating = explode(';', trim($attribute['value']));
-            }
-
-            // Get Event Name
-            if ($attribute['id'] == 716) {
-                $asset->setEventName($attribute['value']);
-            }
-
-            // Get DateTime of date added
-            if ($attribute['id'] == 8) {
-                $asset->setDateAdded($attribute['value']);
-            }
-        } // End foreach
-    }
-
-    /**
-     * @return array
-     */
-    private function simplify_tag_list($tags): array
-    {
-        return array_values(array_unique($tags));
+            match ($attribute['id']) {
+                self::ATTR_SUITABLE_FOR_PUBLICATION => abort_if(
+                    $attribute['value'] !== 'Yes',
+                    403,
+                    'Image is not set as suitable for publication'
+                ),
+                self::ATTR_CATEGORIES => $asset->setCategories($attribute['value']),
+                self::ATTR_DESCRIPTION => $asset->setDescription($attribute['value']),
+                self::ATTR_YEAR_GROUPS => $attribute['value'] ? $asset->addTag($attribute['value']) : null,
+                self::ATTR_TITLE => $asset->setTitle($attribute['value']),
+                self::ATTR_PHOTOGRAPHER => $asset->setPhotographer($attribute['value']),
+                self::ATTR_RATINGS => $asset->rating = explode(';', trim($attribute['value'])),
+                self::ATTR_EVENT_NAME => $asset->setEventName($attribute['value']),
+                self::ATTR_DATE_ADDED => $asset->setDateAdded($attribute['value']),
+                default => null,
+            };
+        }
     }
 
     private function websiteCriteriaCheck(Asset $asset): bool
@@ -302,102 +216,73 @@ class AssetBankController extends Controller
             return false;
         }
 
-        if (in_array('Best', $asset->rating) && in_array('Highlights', $asset->rating)) {
-            return true;
-        }
-
-        return false;
+        return in_array('Best', $asset->rating) && in_array('Highlights', $asset->rating);
     }
 
     /**
-     * @param  bool  $raw
-     * @return JsonResponse|stdClass
-     *
-     * @throws Exception|GuzzleException
+     * @throws Exception
      */
-    public function relatedEvents($searchTerm, ?string $exclude = null, bool $raw = false)
+    public function relatedEvents(mixed $searchTerm, ?string $exclude = null): JsonResponse
     {
-        if ($exclude !== null) {
-            $notinclude = array_map(function ($v) {
-                return trim($v);
-            }, explode(',', $exclude));
-        }
+        return response()->json($this->buildRelatedEvents($searchTerm, $exclude));
+    }
 
-        $args = [
+    /**
+     * @throws Exception
+     */
+    private function buildRelatedEvents(mixed $searchTerm, ?string $exclude = null): stdClass
+    {
+        $notinclude = $exclude !== null
+            ? array_map('trim', explode(',', $exclude))
+            : [];
+
+        $response = $this->api('asset-search', [
             'attribute_716' => $searchTerm,
             'pageSize' => 50,
-        ];
+        ]);
 
-        $response = $this->api('asset-search', $args);
+        if ($notinclude !== []) {
+            $response = array_filter($response, fn ($asset) => ! in_array($asset['id'], $notinclude));
+        }
 
         $result = new stdClass;
+        $result->assets = array_values(array_map(
+            fn ($asset) => $this->buildAsset($asset['id']),
+            $response
+        ));
+        $result->num = count($result->assets);
 
-        $result->assets = [];
-
-        if (! empty($notinclude)) {
-            foreach ($response as $key => $asset) {
-                if (in_array($asset['id'], $notinclude)) {
-                    unset($response[$key]);
-                }
-            }
-        }
-        foreach ($response as $asset) {
-            $result->assets[] = $this->getAssetInfoForWebsite($asset['id'], true);
-        }
-        $result->num = count($response);
-
-        if ($raw === true) {
-            return $result;
-        } else {
-            return response()->json($result);
-        }
+        return $result;
     }
 
     public function getAttributes(): JsonResponse
     {
-        $xml = $this->get('attributes');
+        $this->get('attributes');
 
         return response()->json($this->result);
     }
 
-    /**
-     * get_recent_photos_from_group function.
-     *
-     *
-     * @param  mixed  $groupID
-     * @param  int  $numPhotos  (default: 15)
-     * @return void
-     */
-    public function get_recent_photos_from_group($groupID, $numPhotos = 15)
+    public function get_recent_photos_from_group(mixed $groupID, int $numPhotos = 15): JsonResponse
     {
-        $xml = $this->get(
-            'asset-search',
-            [
-                'descriptiveCategoryForm.categoryIds' => $groupID,
-                'pageSize' => $numPhotos,
-                'attribute_701' => 'Senior',
-                'sortAttributeId' => 7,
-                'sortDescending' => 'true',
-                'orientation' => 1,
-                'attribute_709' => 'Best',
-                //    "includeImplicitCategoryMembers"=>"true"
-            ]
-        );
+        $this->get('asset-search', [
+            'descriptiveCategoryForm.categoryIds' => $groupID,
+            'pageSize' => $numPhotos,
+            'attribute_701' => 'Senior',
+            'sortAttributeId' => 7,
+            'sortDescending' => 'true',
+            'orientation' => 1,
+            'attribute_709' => 'Best',
+        ]);
 
-        //  var_dump($this->result);
         return response()->json($this->result);
     }
 
     /**
      * @throws Exception
      */
-    public function listAssetBankCategories(): JsonResponse
+    public function listAssetBankCategories(): array
     {
         return $this->newGetCategories();
-        $categories = $this->get_categories();
-        $data = ['count' => count($categories), 'categories' => $categories];
-
-        return response()->json($data);
     }
 
     /**
@@ -409,7 +294,6 @@ class AssetBankController extends Controller
         $cats = [];
 
         foreach ($categoryTree as $category) {
-            // don't show anything in the branding category
             if ($category['id'] == '192') {
                 continue;
             }
@@ -424,44 +308,29 @@ class AssetBankController extends Controller
         return $cats;
     }
 
-    /**
-     * @return array|void
-     */
     public function get_categories(): array
     {
         $this->get('category-search');
         $cats = [];
 
-        foreach ($this->result as $tlc) {
+        foreach ($this->result ?? [] as $tlc) {
             if ($tlc->children && is_object($tlc->children)) {
-                $children = $this->loop($tlc->children);
-                $cats += $children;
-            } else {
+                $cats += $this->loop($tlc->children);
             }
 
-            $cats[(int) $tlc->id] = (string) $tlc->name; // . " ".$more;
+            $cats[(int) $tlc->id] = (string) $tlc->name;
         }
 
-        return $cats; // $this->result;
+        return $cats;
     }
 
-    /**
-     * loop function.
-     *
-     * This function is used to iterate through the children of each category. Used in $this->get_categories()
-     *
-     *
-     * @param  mixed  $object
-     */
-    public function loop($object): array
+    public function loop(mixed $object): array
     {
         $output = [];
-        $loop = [];
         foreach ($object->category as $child) {
             $output[(int) $child->id] = (string) $child->name;
             if ($child->children && is_object($child->children)) {
-                $children = $this->loop($child->children);
-                $output += $children;
+                $output += $this->loop($child->children);
             }
         }
 
